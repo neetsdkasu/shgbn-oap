@@ -1,0 +1,8 @@
+
+/classes
+/tmpclasses
+/lib
+/tmplib
+
+*.class
+*.jar
