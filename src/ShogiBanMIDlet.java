@@ -1,10 +1,17 @@
+import javax.microedition.lcdui.Display;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.midlet.MIDletStateChangeException;
 
 public class ShogiBanMIDlet extends MIDlet
 {
-    public ShogiBanMIDlet() {}
-    
+    private ShogiBan shogiBan = null;
+
+    public ShogiBanMIDlet()
+    {
+        shogiBan = new ShogiBan();
+        Display.getDisplay(this).setCurrent(shogiBan);
+    }
+
     protected void destroyApp(boolean unconditional) throws MIDletStateChangeException
     {
     }
@@ -15,5 +22,6 @@ public class ShogiBanMIDlet extends MIDlet
 
     protected void startApp() throws MIDletStateChangeException
     {
+        shogiBan.render();
     }
 }
