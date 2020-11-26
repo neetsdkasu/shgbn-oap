@@ -21,7 +21,7 @@ class ShogiBan extends GameCanvas
 
     private int curX, curY;
 
-    private Image numbersH, numbersV;
+    private Image backgroundImage;
 
     ShogiBan()
     {
@@ -33,52 +33,10 @@ class ShogiBan extends GameCanvas
     {
         Graphics g = getGraphics();
 
-        g.setColor(BACKGROUND_COLOR);
-        g.fillRect(0, 0, DISP_W, DISP_H);
-
-        g.setColor(LINE_COLOR);
-        for (int i = 0; i < 10; i++)
-        {
-            g.drawLine(
-                i*CELL_SIZE + BAN_OFFSET_X,
-                BAN_OFFSET_Y,
-                i*CELL_SIZE + BAN_OFFSET_X,
-                9*CELL_SIZE + BAN_OFFSET_Y
-            );
-
-            g.drawLine(
-                BAN_OFFSET_X,
-                i*CELL_SIZE + BAN_OFFSET_Y,
-                9*CELL_SIZE + BAN_OFFSET_X,
-                i*CELL_SIZE + BAN_OFFSET_Y
-            );
-        }
-
-        g.drawRect(
-            BAN_OFFSET_X,
-            OPPO_HAND_OFFSET_Y,
-            9*CELL_SIZE,
-            CELL_SIZE
-        );
-
-        g.drawRect(
-            BAN_OFFSET_X,
-            MY_HAND_OFFSET_Y,
-            9*CELL_SIZE,
-            CELL_SIZE
-        );
-
         g.drawImage(
-            numbersH,
-            BAN_OFFSET_X,
-            NUMBER_H_OFFSET_Y,
-            Graphics.LEFT|Graphics.TOP
-        );
-
-        g.drawImage(
-            numbersV,
-            NUMBER_V_OFFSET_X,
-            BAN_OFFSET_Y,
+            backgroundImage,
+            0,
+            0,
             Graphics.LEFT|Graphics.TOP
         );
 
@@ -155,36 +113,66 @@ class ShogiBan extends GameCanvas
             }
         }
 
-        // Image numbersH
         {
-            Image img = Image.createImage(9*CELL_SIZE, 12);
+            Image img = Image.createImage(DISP_W, DISP_H);
             Graphics g = img.getGraphics();
-            g.setColor(BACKGROUND_COLOR);
-            g.fillRect(0, 0, img.getWidth(), img.getHeight());
-            g.setFont(Font.getFont(0,0,Font.SIZE_SMALL));
-            g.setColor(LINE_COLOR);
-            for (int i = 0; i < 9; i++)
-            {
-                String s = Integer.toString(9-i);
-                g.drawString(s, i*CELL_SIZE+CELL_SIZE/2, 12, Graphics.HCENTER|Graphics.BOTTOM);
-            }
-            numbersH = Image.createImage(img);
-        }
 
-        // Image numbersV
-        {
-            Image img = Image.createImage(12, 9*CELL_SIZE);
-            Graphics g = img.getGraphics();
             g.setColor(BACKGROUND_COLOR);
-            g.fillRect(0, 0, img.getWidth(), img.getHeight());
+            g.fillRect(0, 0, DISP_W, DISP_H);
+
+            g.setColor(LINE_COLOR);
+            for (int i = 0; i < 10; i++)
+            {
+                g.drawLine(
+                    i*CELL_SIZE + BAN_OFFSET_X,
+                    BAN_OFFSET_Y,
+                    i*CELL_SIZE + BAN_OFFSET_X,
+                    9*CELL_SIZE + BAN_OFFSET_Y
+                );
+
+                g.drawLine(
+                    BAN_OFFSET_X,
+                    i*CELL_SIZE + BAN_OFFSET_Y,
+                    9*CELL_SIZE + BAN_OFFSET_X,
+                    i*CELL_SIZE + BAN_OFFSET_Y
+                );
+            }
+
+            g.drawRect(
+                BAN_OFFSET_X,
+                OPPO_HAND_OFFSET_Y,
+                9*CELL_SIZE,
+                CELL_SIZE
+            );
+
+            g.drawRect(
+                BAN_OFFSET_X,
+                MY_HAND_OFFSET_Y,
+                9*CELL_SIZE,
+                CELL_SIZE
+            );
+
             g.setFont(Font.getFont(0,0,Font.SIZE_SMALL));
             g.setColor(LINE_COLOR);
+
             for (int i = 0; i < 9; i++)
             {
-                String s = String.valueOf(resChars[i]);
-                g.drawString(s, 0, (i+1)*CELL_SIZE, Graphics.LEFT|Graphics.BOTTOM);
+                g.drawString(
+                    Integer.toString(9-i),
+                    i*CELL_SIZE+CELL_SIZE/2 + BAN_OFFSET_X,
+                    12 + NUMBER_H_OFFSET_Y,
+                    Graphics.HCENTER|Graphics.BOTTOM
+                );
+
+                g.drawString(
+                    String.valueOf(resChars[i]),
+                    NUMBER_V_OFFSET_X,
+                    (i+1)*CELL_SIZE + BAN_OFFSET_Y,
+                    Graphics.LEFT|Graphics.BOTTOM
+                );
             }
-            numbersV = Image.createImage(img);
+
+            backgroundImage = Image.createImage(img);
         }
 
     }
