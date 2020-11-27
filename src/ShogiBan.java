@@ -5,6 +5,10 @@ import javax.microedition.lcdui.game.*;
 
 class ShogiBan extends GameCanvas
 {
+    private static final boolean WTK =
+        String.valueOf(System.getProperty("microedition.platform"))
+            .startsWith("Sun");
+
     private static final int
         BACKGROUND_COLOR = 0xFFB000,
         CURSOR_COLOR = 0x00FFFF,
@@ -21,6 +25,9 @@ class ShogiBan extends GameCanvas
         BAN_OFFSET_Y = NUMBER_H_OFFSET_Y + 12,
         MY_HAND_OFFSET_Y = BAN_OFFSET_Y + 9*CELL_SIZE + SPACE,
         NUMBER_V_OFFSET_X = BAN_OFFSET_X + 9*CELL_SIZE + SPACE;
+
+    private final Font
+        SMALL_FONT = Font.getFont(0, 0, WTK ? Font.SIZE_MEDIUM : Font.SIZE_SMALL);
 
     private int curX, curY;
 
@@ -70,7 +77,7 @@ class ShogiBan extends GameCanvas
                 hands[i][k] = rand.nextInt(4);
 
 
-        g.setFont(Font.getFont(0,0,Font.SIZE_SMALL));
+        g.setFont(SMALL_FONT);
         for (int k = 0; k < 8; k++)
         {
             if (hands[0][k] > 0)
@@ -260,7 +267,7 @@ class ShogiBan extends GameCanvas
                 CELL_SIZE
             );
 
-            g.setFont(Font.getFont(0,0,Font.SIZE_SMALL));
+            g.setFont(SMALL_FONT);
             g.setColor(LINE_COLOR);
 
             for (int i = 0; i < 9; i++)
@@ -287,6 +294,8 @@ class ShogiBan extends GameCanvas
         {
             Image img = Image.createImage(8*CELL_SIZE, 4*CELL_SIZE);
             Graphics g = img.getGraphics();
+
+            g.setFont(SMALL_FONT);
 
             int invisible = 0xFFFFFF;
             g.setColor(invisible);
