@@ -204,6 +204,18 @@ class Game extends Board
         return true;
     }
 
+    int getRange(int player, int row, int col)
+    {
+        if (inField(row, col))
+        {
+            return range[player][row][col];
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
     boolean canMoveTo(int row, int col)
     {
         return movable[row][col];
@@ -255,7 +267,7 @@ class Game extends Board
                 {
                     continue;
                 }
-                if (useRange && range[opponent ? 0 : 1][tmpRow][col+dc] > 0)
+                if (useRange && getRange(opponent ? 0 : 1, tmpRow, col+dc) > 0)
                 {
                     continue;
                 }
