@@ -26,14 +26,9 @@ abstract class Board
 
     public final int kind(int row, int col)
     {
-        if (isOpponent(row, col))
-        {
-            return field(row, col) - OPPONENT;
-        }
-        else
-        {
-            return field(row, col);
-        }
+        return isOpponent(row, col)
+            ? field(row, col) - OPPONENT
+            : field(row, col);
     }
 
     public final boolean isOpponent(int row, int col)

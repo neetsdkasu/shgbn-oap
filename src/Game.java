@@ -91,7 +91,7 @@ class Game extends Board
         {
             for (int col = 0; col < 9; col++)
             {
-                if (canMoveTo(row, col))
+                if (movable[row][col])
                 {
                     range[player][row][col]++;
                 }
@@ -105,7 +105,7 @@ class Game extends Board
         {
             for (int col = 0; col < 9; col++)
             {
-                if (canMoveTo(row, col))
+                if (movable[row][col])
                 {
                     range[player][row][col]--;
                 }
@@ -206,19 +206,16 @@ class Game extends Board
 
     int getRange(int player, int row, int col)
     {
-        if (inField(row, col))
-        {
-            return range[player][row][col];
-        }
-        else
-        {
-            return 0;
-        }
+        return inField(row, col)
+            ? range[player][row][col]
+            : 0;
     }
 
     boolean canMoveTo(int row, int col)
     {
-        return movable[row][col];
+        return inField(row, col)
+            ? movable[row][col]
+            : false;
     }
 
     private boolean setMovable(int row, int col, boolean opponent)
