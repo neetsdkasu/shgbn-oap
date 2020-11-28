@@ -41,7 +41,9 @@ class ShogiBan extends GameCanvas
     private int state = 0;
     private int menuMode = 0;
 
-    private GameState gameState;
+    private Game game;
+    private Problem problem;
+    private Board board;
 
     ShogiBan()
     {
@@ -49,8 +51,14 @@ class ShogiBan extends GameCanvas
         loadResources();
         makeStaticImages();
 
-        gameState = GameState.newNormalGame(false);
-        gameState.init();
+        game = Game.newNormalGame(false);
+        game.init();
+        board = game;
+    }
+
+    boolean isGameMode()
+    {
+        return mode == 0;
     }
 
     void menu()
@@ -69,82 +77,27 @@ class ShogiBan extends GameCanvas
             Graphics.LEFT|Graphics.TOP
         );
 
-        g.setFont(SMALL_FONT);
-        for (int k = 0; k < 8; k++)
-        {
-            if (gameState.hands(0,k) > 0)
-            {
-                komaStamp.setPosition(
-                    k*HANDS_CELL_WIDTH + BAN_OFFSET_X,
-                    MY_HAND_OFFSET_Y
-                );
-                komaStamp.setFrame(k);
-                komaStamp.paint(g);
-                if (gameState.hands(0,k) > 1)
-                {
-                    g.setColor(0xFFFFFF);
-                    g.fillRect(
-                        (k+1)*HANDS_CELL_WIDTH - 7 + BAN_OFFSET_X,
-                        CELL_SIZE - 12 + MY_HAND_OFFSET_Y,
-                        6,
-                        11
-                    );
-                    g.setColor(LINE_COLOR);
-                    g.drawString(
-                        Integer.toString(gameState.hands(0,k)),
-                        (k+1)*HANDS_CELL_WIDTH - 1 + BAN_OFFSET_X,
-                        CELL_SIZE + MY_HAND_OFFSET_Y,
-                        Graphics.RIGHT|Graphics.BOTTOM
-                    );
-                }
-            }
-            if (gameState.hands(1,k) > 0)
-            {
-                komaStamp.setPosition(
-                    k*HANDS_CELL_WIDTH + BAN_OFFSET_X,
-                    OPPO_HAND_OFFSET_Y
-                );
-                komaStamp.setFrame(k+16 + ((k/7)*8));
-                komaStamp.paint(g);
-                if (gameState.hands(1,k) > 1)
-                {
-                    g.setColor(0xFFFFFF);
-                    g.fillRect(
-                        (k+1)*HANDS_CELL_WIDTH - 7 + BAN_OFFSET_X,
-                        CELL_SIZE - 12 + OPPO_HAND_OFFSET_Y,
-                        6,
-                        11
-                    );
-                    g.setColor(LINE_COLOR);
-                    g.drawString(
-                        Integer.toString(gameState.hands(1,k)),
-                        (k+1)*HANDS_CELL_WIDTH - 1 + BAN_OFFSET_X,
-                        CELL_SIZE + OPPO_HAND_OFFSET_Y,
-                        Graphics.RIGHT|Graphics.BOTTOM
-                    );
+        renderHands(g);
 
-                }
-            }
-        }
+        colorField.paint(g);
 
         for (int row = 0; row < 9; row++)
         {
             for (int col = 0; col < 9; col++)
             {
-                komaField.setCell(col, row, gameState.field(row, col));
+                komaField.setCell(col, row, board.field(row, col));
             }
         }
-
-        colorField.paint(g);
         komaField.paint(g);
+
         modeMark.setFrame(mode);
         modeMark.paint(g);
 
         g.setColor(LINE_COLOR);
         int headerOffsetX = modeMark.getWidth() + SPACE;
-        if (gameState.stepLimit > 0)
+        if (board.getStepLimit() > 0)
         {
-            String s = Integer.toString(gameState.stepLimit) + resWords[2];
+            String s = Integer.toString(board.getStepLimit()) + resWords[2];
             g.drawString(
                 s,
                 headerOffsetX,
@@ -153,38 +106,20 @@ class ShogiBan extends GameCanvas
             );
             headerOffsetX += SMALL_FONT.stringWidth(s) + SPACE;
         }
-        headerOffsetX += SMALL_FONT.stringWidth("000" + resWords[3]);
-        g.drawString(
-            Integer.toString(gameState.currentStep+1) + resWords[3],
-            headerOffsetX,
-            0,
-            Graphics.RIGHT|Graphics.TOP
-        );
-        headerOffsetX += SPACE;
-        g.drawString(
-            resWords[4 + (gameState.firstPlayer ^ gameState.currentPlayer)],
-            headerOffsetX,
-            0,
-            Graphics.LEFT|Graphics.TOP
-        );
 
-        g.setColor(LINE_COLOR);
-        g.setFont(SMALL_FONT);
-        g.drawString(
-            resWords[1-gameState.firstPlayer],
-            (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[1-gameState.firstPlayer]))/2,
-            OPPO_HAND_OFFSET_Y+(CELL_SIZE-SMALL_FONT.getHeight())/2,
-            Graphics.LEFT|Graphics.TOP
-        );
-        g.drawString(
-            resWords[gameState.firstPlayer],
-            (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[gameState.firstPlayer]))/2,
-            MY_HAND_OFFSET_Y+(CELL_SIZE-SMALL_FONT.getHeight())/2,
-            Graphics.LEFT|Graphics.TOP
-        );
+        if (isGameMode())
+        {
+            renderGameInfo(g, headerOffsetX);
+        }
 
+        renderCursor(g);
 
-        if (mode == 0)
+        flushGraphics();
+    }
+
+    private void renderCursor(Graphics g)
+    {
+        if (isGameMode())
         {
             g.setColor(CURSOR_COLOR);
             if (curY < 9)
@@ -215,13 +150,105 @@ class ShogiBan extends GameCanvas
                 );
             }
         }
+    }
 
-        flushGraphics();
+    private void renderGameInfo(Graphics g, int headerOffsetX)
+    {
+        headerOffsetX += SMALL_FONT.stringWidth("000" + resWords[3]);
+        g.drawString(
+            Integer.toString(game.currentStep+1) + resWords[3],
+            headerOffsetX,
+            0,
+            Graphics.RIGHT|Graphics.TOP
+        );
+        headerOffsetX += SPACE;
+        g.drawString(
+            resWords[4 + (game.firstPlayer ^ game.currentPlayer)],
+            headerOffsetX,
+            0,
+            Graphics.LEFT|Graphics.TOP
+        );
+
+        g.setColor(LINE_COLOR);
+        g.setFont(SMALL_FONT);
+        g.drawString(
+            resWords[1-game.firstPlayer],
+            (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[1-game.firstPlayer]))/2,
+            OPPO_HAND_OFFSET_Y+(CELL_SIZE-SMALL_FONT.getHeight())/2,
+            Graphics.LEFT|Graphics.TOP
+        );
+        g.drawString(
+            resWords[game.firstPlayer],
+            (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[game.firstPlayer]))/2,
+            MY_HAND_OFFSET_Y+(CELL_SIZE-SMALL_FONT.getHeight())/2,
+            Graphics.LEFT|Graphics.TOP
+        );
+    }
+
+    private void renderHands(Graphics g)
+    {
+        g.setFont(SMALL_FONT);
+        for (int k = 0; k < 8; k++)
+        {
+            if (board.hands(0,k) > 0)
+            {
+                komaStamp.setPosition(
+                    k*HANDS_CELL_WIDTH + BAN_OFFSET_X,
+                    MY_HAND_OFFSET_Y
+                );
+                komaStamp.setFrame(k);
+                komaStamp.paint(g);
+                if (board.hands(0,k) > 1)
+                {
+                    g.setColor(0xFFFFFF);
+                    g.fillRect(
+                        (k+1)*HANDS_CELL_WIDTH - 7 + BAN_OFFSET_X,
+                        CELL_SIZE - 12 + MY_HAND_OFFSET_Y,
+                        6,
+                        11
+                    );
+                    g.setColor(LINE_COLOR);
+                    g.drawString(
+                        Integer.toString(board.hands(0,k)),
+                        (k+1)*HANDS_CELL_WIDTH - 1 + BAN_OFFSET_X,
+                        CELL_SIZE + MY_HAND_OFFSET_Y,
+                        Graphics.RIGHT|Graphics.BOTTOM
+                    );
+                }
+            }
+            if (board.hands(1,k) > 0)
+            {
+                komaStamp.setPosition(
+                    k*HANDS_CELL_WIDTH + BAN_OFFSET_X,
+                    OPPO_HAND_OFFSET_Y
+                );
+                komaStamp.setFrame(k+16 + ((k/7)*8));
+                komaStamp.paint(g);
+                if (board.hands(1,k) > 1)
+                {
+                    g.setColor(0xFFFFFF);
+                    g.fillRect(
+                        (k+1)*HANDS_CELL_WIDTH - 7 + BAN_OFFSET_X,
+                        CELL_SIZE - 12 + OPPO_HAND_OFFSET_Y,
+                        6,
+                        11
+                    );
+                    g.setColor(LINE_COLOR);
+                    g.drawString(
+                        Integer.toString(board.hands(1,k)),
+                        (k+1)*HANDS_CELL_WIDTH - 1 + BAN_OFFSET_X,
+                        CELL_SIZE + OPPO_HAND_OFFSET_Y,
+                        Graphics.RIGHT|Graphics.BOTTOM
+                    );
+
+                }
+            }
+        }
     }
 
     protected void keyPressed(int keyCode)
     {
-        if (mode == 0)
+        if (isGameMode())
         {
             movePlayModeCursor(keyCode);
         }
@@ -271,11 +298,11 @@ class ShogiBan extends GameCanvas
                 // TODO (select hands)
                 return;
             }
-            if (!gameState.select(curY, curX))
+            if (!game.select(curY, curX))
             {
                 return;
             }
-            int frame = (gameState.isOpponent(curY, curX) ? 4 : 1) + 1;
+            int frame = (game.isOpponent(curY, curX) ? 4 : 1) + 1;
             for (int row = 0; row < 9; row++)
             {
                 for (int col = 0; col < 9; col++)
@@ -283,7 +310,7 @@ class ShogiBan extends GameCanvas
                     colorField.setCell(
                         col,
                         row,
-                        gameState.canMoveTo(row, col) ? frame : 0
+                        game.canMoveTo(row, col) ? frame : 0
                     );
                 }
             }

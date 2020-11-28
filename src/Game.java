@@ -1,119 +1,140 @@
 import java.io.*;
 import java.util.*;
 
-class GameState
+class Game extends Board
 {
-    static final int
-        OPPONENT = 16,
-        FU = 1,
-        KYO = 2,
-        KEI = 3,
-        GIN = 4,
-        KIN = 5,
-        KAKU = 6,
-        HI = 7,
-        GYOKU = 8,
-        TO = 9,
-        NKYO = 10,
-        NKEI = 11,
-        NGIN = 12,
-        UMA = 14,
-        RYU = 15,
-        OU = 16;
 
-    static GameState newNormalGame(boolean opponentFirst)
+    static Game newNormalGame(boolean opponentFirst)
     {
-        GameState gs = new GameState();
+        Game game = new Game(Problem.getNormalGame());
 
         if (opponentFirst)
         {
-            gs.firstPlayer = 1;
+            game.firstPlayer = 1;
         }
 
-        for (int i = 0; i < 4; i++)
-        {
-            gs.initialField[0][i] = KYO + i + OPPONENT;
-            gs.initialField[0][8-i] = KYO + i + OPPONENT;
-            gs.initialField[8][i] = KYO + i;
-            gs.initialField[8][8-i] = KYO + i;
-        }
-
-        gs.initialField[0][4] = OU + OPPONENT;
-        gs.initialField[1][1] = HI + OPPONENT;
-        gs.initialField[1][7] = KAKU + OPPONENT;
-        gs.initialField[8][4] = GYOKU;
-        gs.initialField[7][7] = HI;
-        gs.initialField[7][1] = KAKU;
-
-        for (int i = 0; i < 9; i++)
-        {
-            gs.initialField[2][i] = FU + OPPONENT;
-            gs.initialField[6][i] = FU;
-        }
-
-        return gs;
+        return game;
     }
 
-    int stepLimit, currentStep;
-    String title;
-
+    int currentStep;
     int firstPlayer, currentPlayer;
 
-    int[][] initialField, currentField, initialHands, currentHands;
-    boolean[][] movable;
+    final Problem problem;
+    final int[][] currentField, currentHands;
+    final boolean[][] movable;
+    final int[][][] range;
 
-    GameState()
+    Game(Problem p)
     {
-        initialField = new int[9][9];
         currentField = new int[9][9];
-        initialHands = new int[2][8];
         currentHands = new int[2][8];
         movable = new boolean[9][9];
+        range = new int[2][9][9];
+        problem = p;
     }
 
     void init()
     {
         currentStep = 0;
         currentPlayer = firstPlayer;
-        for (int i = 0; i < initialField.length; i++)
+        for (int i = 0; i < 9; i++)
         {
             System.arraycopy(
-                initialField[i],
+                problem.initialField[i],
                 0,
                 currentField[i],
                 0,
                 currentField[i].length
             );
         }
-        for (int i = 0; i < initialHands.length; i++)
+        for (int i = 0; i < 2; i++)
         {
             System.arraycopy(
-                initialHands[i],
+                problem.initialHands[i],
                 0,
                 currentHands[i],
                 0,
                 currentHands[i].length
             );
         }
+        resetRange();
     }
 
-    int hands(int player, int koma)
+    private void resetRange()
     {
-        return currentHands[player][koma];
+        for (int i = 0; i < 2; i++)
+        {
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    range[i][row][col] = 0;
+                }
+            }
+        }
+
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                if (select(row, col, false))
+                {
+                    addRange(isOpponent(row, col) ? 1 : 0);
+                }
+            }
+        }
     }
 
-    int field(int row, int col)
+    private void addRange(int player)
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                if (canMoveTo(row, col))
+                {
+                    range[player][row][col]++;
+                }
+            }
+        }
+    }
+
+    private void removeRange(int player)
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                if (canMoveTo(row, col))
+                {
+                    range[player][row][col]--;
+                }
+            }
+        }
+    }
+
+    public String getTitle()
+    {
+        return problem.getTitle();
+    }
+
+    public int getStepLimit()
+    {
+        return problem.getStepLimit();
+    }
+
+    public int hands(int player, int kind)
+    {
+        return currentHands[player][kind];
+    }
+
+    public int field(int row, int col)
     {
         return currentField[row][col];
     }
 
-    boolean select(int row, int col)
+    void clearMovable()
     {
-        if (field(row, col) == 0)
-        {
-            return false;
-        }
-
         for (int i = 0; i < 9; i++)
         {
             for (int k = 0; k < 9; k++)
@@ -121,6 +142,21 @@ class GameState
                 movable[i][k] = false;
             }
         }
+    }
+
+    boolean select(int row, int col)
+    {
+        return select(row, col, true);
+    }
+
+    boolean select(int row, int col, boolean useRange)
+    {
+        if (field(row, col) == 0)
+        {
+            return false;
+        }
+
+        clearMovable();
 
         switch (kind(row, col))
         {
@@ -146,7 +182,7 @@ class GameState
             fillMovableHI(row, col);
             break;
         case GYOKU:
-            fillMovableGYOKU(row, col);
+            fillMovableGYOKU(row, col, useRange);
             break;
         case TO:
         case NKYO:
@@ -161,7 +197,7 @@ class GameState
             fillMovableRYU(row, col);
             break;
         case OU:
-            fillMovableGYOKU(row, col);
+            fillMovableGYOKU(row, col, useRange);
             break;
         }
 
@@ -171,33 +207,6 @@ class GameState
     boolean canMoveTo(int row, int col)
     {
         return movable[row][col];
-    }
-
-    int kind(int row, int col)
-    {
-        if (isOpponent(row, col))
-        {
-            return field(row, col) - OPPONENT;
-        }
-        else
-        {
-            return field(row, col);
-        }
-    }
-
-    boolean isOpponent(int row, int col)
-    {
-        return field(row, col) > OPPONENT;
-    }
-
-    boolean isMine(int row, int col)
-    {
-        return 0 < field(row, col) && !isOpponent(row, col);
-    }
-
-    boolean inField(int row, int col)
-    {
-        return 0 <= row && row < 9 && 0 <= col && col < 9;
     }
 
     private boolean setMovable(int row, int col, boolean opponent)
@@ -216,17 +225,25 @@ class GameState
 
     private void fillMovableRYU(int row, int col)
     {
-        fillMovableGYOKU(row, col);
+        boolean opponent = isOpponent(row, col);
+        setMovable(row+1, col+1, opponent);
+        setMovable(row+1, col-1, opponent);
+        setMovable(row-1, col+1, opponent);
+        setMovable(row-1, col-1, opponent);
         fillMovableHI(row, col);
     }
 
     private void fillMovableUMA(int row, int col)
     {
-        fillMovableGYOKU(row, col);
+        boolean opponent = isOpponent(row, col);
+        setMovable(row+1, col, opponent);
+        setMovable(row+1, col, opponent);
+        setMovable(row, col+1, opponent);
+        setMovable(row, col-1, opponent);
         fillMovableKAKU(row, col);
     }
 
-    private void fillMovableGYOKU(int row, int col)
+    private void fillMovableGYOKU(int row, int col, boolean useRange)
     {
         boolean opponent = isOpponent(row, col);
         for (int dr = -1; dr < 2; dr++)
@@ -235,6 +252,10 @@ class GameState
             for (int dc = -1; dc < 2; dc++)
             {
                 if (dc == 0 && dr == 0)
+                {
+                    continue;
+                }
+                if (useRange && range[opponent ? 0 : 1][tmpRow][col+dc] > 0)
                 {
                     continue;
                 }
@@ -316,14 +337,10 @@ class GameState
     {
         fillMovableFU(row, col);
         boolean opponent = isOpponent(row, col);
-        for (int dr = -1; dr < 2; dr += 2)
-        {
-            int tmpRow = row + dr;
-            for (int dc = -1; dc < 2; dc += 2)
-            {
-                setMovable(tmpRow, col+dc, opponent);
-            }
-        }
+        setMovable(row+1, col+1, opponent);
+        setMovable(row+1, col-1, opponent);
+        setMovable(row-1, col+1, opponent);
+        setMovable(row-1, col-1, opponent);
     }
 
     private void fillMovableKEI(int row, int col)
