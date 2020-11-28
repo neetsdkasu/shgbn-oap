@@ -144,6 +144,102 @@ class Game extends Board
         }
     }
 
+    boolean needRankUp(int row, int col, int toRow)
+    {
+        switch (kind(row, col))
+        {
+        case FU:
+        case KYO:
+            return isOpponent(row, col) ? (toRow == 8) : (toRow == 0);
+        case KEI:
+            return isOpponent(row, col) ? (toRow >= 7) : (toRow <= 1);
+        default:
+            return false;
+        }
+    }
+
+    boolean canRankUp(int row, int col, int toRow)
+    {
+        if (isOpponent(row, col))
+        {
+            return isRankUpRow(1, toRow);
+        }
+        else
+        {
+            return isMine(row, col) ? isRankUpRow(0, toRow) : false;
+        }
+    }
+
+    boolean isRankUpRow(int row)
+    {
+        return isRankUpRow(currentPlayer, row);
+    }
+
+    boolean isRankUpRow(int player, int row)
+    {
+        return player == 0 ? (row <= 2) : (row >= 6);
+    }
+
+    boolean move(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        return move(fromRow, fromCol, toRow, toCol, false);
+    }
+
+    boolean move(int fromRow, int fromCol, int toRow, int toCol, boolean rankUp)
+    {
+        if (currentPlayer == 0)
+        {
+            if (!isMine(fromRow, fromCol))
+            {
+                return false;
+            }
+        }
+        else if (!isOpponent(fromRow, fromCol))
+        {
+            return false;
+        }
+        if (!select(fromRow, fromCol))
+        {
+            return false;
+        }
+        if (!canMoveTo(toRow, toCol))
+        {
+            return false;
+        }
+        if (rankUp)
+        {
+            int k = kind(fromRow, fromCol);
+            if (k == KIN || k >= GYOKU)
+            {
+                rankUp = false;
+            }
+            else
+            {
+                rankUp = isRankUpRow(fromRow) || isRankUpRow(toRow);
+            }
+        }
+        else
+        {
+            rankUp = needRankUp(fromRow, fromCol, toRow);
+        }
+        select(fromRow, fromCol, false);
+        removeRange(currentPlayer);
+        if (field(toRow, toCol) != 0)
+        {
+            select(toRow, toCol, false);
+            removeRange(1^currentPlayer);
+            currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]++;
+        }
+        currentField[toRow][toCol] = currentField[fromRow][fromCol]
+                                   + (rankUp ? 8 : 0);
+        currentField[fromRow][fromCol] = 0;
+        select(toRow, toCol, false);
+        addRange(currentPlayer);
+        currentStep++;
+        currentPlayer ^= 1;
+        return true;
+    }
+
     boolean select(int row, int col)
     {
         return select(row, col, true);
@@ -211,11 +307,28 @@ class Game extends Board
             : 0;
     }
 
+    boolean isCurrentPlayer(int row, int col)
+    {
+        return currentPlayer == 0
+            ? isMine(row, col)
+            : isOpponent(row, col);
+    }
+
     boolean canMoveTo(int row, int col)
     {
-        return inField(row, col)
-            ? movable[row][col]
-            : false;
+        if (!inField(row, col))
+        {
+            return false;
+        }
+        int k = kind(row, col);
+        if (k == GYOKU || k == OU)
+        {
+            if (!isCurrentPlayer(row, col))
+            {
+                return false;
+            }
+        }
+        return movable[row][col];
     }
 
     private boolean setMovable(int row, int col, boolean opponent)

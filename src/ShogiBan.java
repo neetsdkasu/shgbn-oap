@@ -29,7 +29,7 @@ class ShogiBan extends GameCanvas
     private final Font
         SMALL_FONT = Font.getFont(0, 0, WTK ? Font.SIZE_MEDIUM : Font.SIZE_SMALL);
 
-    private int curX, curY;
+    private int curX, curY, selX, selY, menuCur;
 
     private Image backgroundImage;
     private Sprite komaStamp, modeMark;
@@ -114,43 +114,79 @@ class ShogiBan extends GameCanvas
 
         renderCursor(g);
 
+        switch (menuMode)
+        {
+        case 1:
+            renderRankUpMenu(g);
+            break;
+        }
+
         flushGraphics();
+    }
+
+    private void renderRankUpMenu(Graphics g)
+    {
+        g.setColor(0xE0E0E0);
+        g.fillRect(40, 100, 60, 60);
+        g.setColor(0xFFFF00);
+        g.fillRect(40, 100, 60, 20);
+        g.setColor(LINE_COLOR);
+        g.drawRect(40, 100, 60, 20);
+        g.drawRect(40, 120, 60, 20);
+        g.drawRect(40, 140, 60, 20);
+        g.drawString(resWords[6], 40, 100, Graphics.LEFT|Graphics.TOP);
+        g.drawString(resWords[7], 40, 120, Graphics.LEFT|Graphics.TOP);
+        g.drawString(resWords[8], 40, 140, Graphics.LEFT|Graphics.TOP);
+        g.setColor(0x7F7F7F);
+        g.drawRect(39, 99, 62, 62);
+        g.setColor(RED);
+        g.drawRect(40, 100, 60, 20);
     }
 
     private void renderCursor(Graphics g)
     {
         if (isGameMode())
         {
-            g.setColor(CURSOR_COLOR);
-            if (curY < 9)
+            if (state == 1)
             {
-                g.drawRect(
-                    curX*CELL_SIZE + BAN_OFFSET_X,
-                    curY*CELL_SIZE + BAN_OFFSET_Y,
-                    CELL_SIZE,
-                    CELL_SIZE
-                );
+                renderBanCursor(g, selX, selY, 0x00FF00);
             }
-            else if (curY == 9)
-            {
-                g.drawRect(
-                    curX*HANDS_CELL_WIDTH + BAN_OFFSET_X,
-                    MY_HAND_OFFSET_Y,
-                    HANDS_CELL_WIDTH,
-                    CELL_SIZE
-                );
-            }
-            else
-            {
-                g.drawRect(
-                    curX*HANDS_CELL_WIDTH + BAN_OFFSET_X,
-                    OPPO_HAND_OFFSET_Y,
-                    HANDS_CELL_WIDTH,
-                    CELL_SIZE
-                );
-            }
+            renderBanCursor(g, curX, curY, CURSOR_COLOR);
         }
     }
+
+    private void renderBanCursor(Graphics g, int x, int y, int color)
+    {
+        g.setColor(color);
+        if (y < 9)
+        {
+            g.drawRect(
+                x*CELL_SIZE + BAN_OFFSET_X,
+                y*CELL_SIZE + BAN_OFFSET_Y,
+                CELL_SIZE,
+                CELL_SIZE
+            );
+        }
+        else if (y == 9)
+        {
+            g.drawRect(
+                x*HANDS_CELL_WIDTH + BAN_OFFSET_X,
+                MY_HAND_OFFSET_Y,
+                HANDS_CELL_WIDTH,
+                CELL_SIZE
+            );
+        }
+        else
+        {
+            g.drawRect(
+                x*HANDS_CELL_WIDTH + BAN_OFFSET_X,
+                OPPO_HAND_OFFSET_Y,
+                HANDS_CELL_WIDTH,
+                CELL_SIZE
+            );
+        }
+    }
+
 
     private void renderGameInfo(Graphics g, int headerOffsetX)
     {
@@ -172,8 +208,8 @@ class ShogiBan extends GameCanvas
         g.setColor(LINE_COLOR);
         g.setFont(SMALL_FONT);
         g.drawString(
-            resWords[1-game.firstPlayer],
-            (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[1-game.firstPlayer]))/2,
+            resWords[1^game.firstPlayer],
+            (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[1^game.firstPlayer]))/2,
             OPPO_HAND_OFFSET_Y+(CELL_SIZE-SMALL_FONT.getHeight())/2,
             Graphics.LEFT|Graphics.TOP
         );
@@ -246,11 +282,28 @@ class ShogiBan extends GameCanvas
         }
     }
 
+    private void openMenu(int menuId)
+    {
+        // push stack submenu?
+        menuMode = menuId;
+        menuCur = 0;
+    }
+
+    private void closeMenu()
+    {
+        // pop stack submenu?
+    }
+
     protected void keyPressed(int keyCode)
     {
-        if (isGameMode())
+        switch (menuMode)
         {
-            movePlayModeCursor(keyCode);
+        case 0:
+            if (isGameMode())
+            {
+                movePlayModeCursor(keyCode);
+            }
+            break;
         }
     }
 
@@ -293,16 +346,32 @@ class ShogiBan extends GameCanvas
             }
             break;
         case Canvas.FIRE:
+            if (!firePlayeMode())
+            {
+                return;
+            }
+            break;
+        default:
+            return;
+        }
+        render();
+    }
+
+    private boolean firePlayeMode()
+    {
+        switch (state)
+        {
+        case 0:
             if (curY >= 9)
             {
                 // TODO (select hands)
-                return;
+                return false;
             }
             if (!game.select(curY, curX))
             {
-                return;
+                return false;
             }
-            int frame = (game.isOpponent(curY, curX) ? 4 : 1) + 1;
+            int frame = (game.isCurrentPlayer(curY, curX) ? 2 : 4) + 1;
             for (int row = 0; row < 9; row++)
             {
                 for (int col = 0; col < 9; col++)
@@ -314,11 +383,39 @@ class ShogiBan extends GameCanvas
                     );
                 }
             }
-            break;
-        default:
-            return;
+            if (game.isCurrentPlayer(curY, curX))
+            {
+                selX = curX;
+                selY = curY;
+                state = 1;
+            }
+            return true;
+        case 1:
+            if (game.canMoveTo(curY, curX))
+            {
+                if (game.canRankUp(selY, selX, curY))
+                {
+                    if (!game.needRankUp(selY, selX, curY))
+                    {
+                        state = 2;
+                        openMenu(1);
+                        return true;
+                    }
+                }
+                if (game.move(selY, selX, curY, curX))
+                {
+                    state = 0;
+                    colorField.fillCells(0, 0, 9, 9, 0);
+                    return true;
+                }
+            }
+            else if (curY >= 9 || game.field(curY, curX) != 0)
+            {
+                state = 0;
+                return firePlayeMode();
+            }
         }
-        render();
+        return false;
     }
 
     void loadResources()
@@ -362,14 +459,17 @@ class ShogiBan extends GameCanvas
             }
         }
 
-        resWords = new String[6];
+        resWords = new String[9];
 
         resWords[0] = resChars[31] + resChars[24]; // first player SEN-TE
         resWords[1] = resChars[32] + resChars[24]; // second player GO-TE
-        resWords[2] = resChars[24] + resChars[25]+ resChars[26]; // step limit TE-DU-ME
+        resWords[2] = resChars[24] + resChars[25] + resChars[26]; // step limit TE-DU-ME
         resWords[3] = resChars[24] + resChars[33]; // step TE-ME
         resWords[4] = resWords[0] + resChars[34]; // first player's turn SEN-TE-BAN
         resWords[5] = resWords[1] + resChars[34]; // second player's turn GO-TE-BAN
+        resWords[6] = resChars[29] + resChars[30]; // rank up NA-RU
+        resWords[7] = resChars[28] + resChars[29]; // keep rank FU-NARI
+        resWords[8] = resChars[35] + resChars[36]; // cancel TORI-KESHI
     }
 
     void makeStaticImages()
