@@ -19,7 +19,7 @@ class ShogiBan extends GameCanvas
         SPACE = 4,
         CELL_SIZE = 20,
         HANDS_CELL_WIDTH = 9*CELL_SIZE/8,
-        OPPO_HAND_OFFSET_Y = 14,
+        OPPO_HAND_OFFSET_Y = 20,
         NUMBER_H_OFFSET_Y = OPPO_HAND_OFFSET_Y+CELL_SIZE+SPACE,
         BAN_OFFSET_X = (DISP_W - 9*CELL_SIZE) / 2,
         BAN_OFFSET_Y = NUMBER_H_OFFSET_Y + 12,
@@ -32,17 +32,30 @@ class ShogiBan extends GameCanvas
     private int curX, curY;
 
     private Image backgroundImage;
-    private Sprite komaStamp;
+    private Sprite komaStamp, modeMark;
     private TiledLayer komaField, colorField;
 
-    private String[] resChars = null;
+    private String[] resChars, resWords;
 
-    private int[][] hands = new int[2][8];
+    private int mode = 0;
+    private int state = 0;
+    private int menuMode = 0;
+
+    private GameState gameState;
 
     ShogiBan()
     {
         super(false);
+        loadResources();
         makeStaticImages();
+
+        gameState = GameState.newNormalGame(false);
+        gameState.init();
+    }
+
+    void menu()
+    {
+
     }
 
     void render()
@@ -56,31 +69,10 @@ class ShogiBan extends GameCanvas
             Graphics.LEFT|Graphics.TOP
         );
 
-        Random rand = new Random();
-        rand.setSeed(System.currentTimeMillis());
-        for (int i = 0; i < 9; i++)
-        {
-            for (int k = 0; k < 9; k++)
-            {
-                if ((rand.nextInt()&7) < 3)
-                {
-                    colorField.setCell(i,k,(i+k)%4+1);
-                }
-                else
-                {
-                    colorField.setCell(i,k,0);
-                }
-            }
-        }
-        for (int i = 0; i < 2; i++)
-            for (int k = 0; k < 8; k++)
-                hands[i][k] = rand.nextInt(4);
-
-
         g.setFont(SMALL_FONT);
         for (int k = 0; k < 8; k++)
         {
-            if (hands[0][k] > 0)
+            if (gameState.hands(0,k) > 0)
             {
                 komaStamp.setPosition(
                     k*HANDS_CELL_WIDTH + BAN_OFFSET_X,
@@ -88,7 +80,7 @@ class ShogiBan extends GameCanvas
                 );
                 komaStamp.setFrame(k);
                 komaStamp.paint(g);
-                if (hands[0][k] > 1)
+                if (gameState.hands(0,k) > 1)
                 {
                     g.setColor(0xFFFFFF);
                     g.fillRect(
@@ -99,14 +91,14 @@ class ShogiBan extends GameCanvas
                     );
                     g.setColor(LINE_COLOR);
                     g.drawString(
-                        Integer.toString(hands[0][k]),
+                        Integer.toString(gameState.hands(0,k)),
                         (k+1)*HANDS_CELL_WIDTH - 1 + BAN_OFFSET_X,
                         CELL_SIZE + MY_HAND_OFFSET_Y,
                         Graphics.RIGHT|Graphics.BOTTOM
                     );
                 }
             }
-            if (hands[1][k] > 0)
+            if (gameState.hands(1,k) > 0)
             {
                 komaStamp.setPosition(
                     k*HANDS_CELL_WIDTH + BAN_OFFSET_X,
@@ -114,7 +106,7 @@ class ShogiBan extends GameCanvas
                 );
                 komaStamp.setFrame(k+16 + ((k/7)*8));
                 komaStamp.paint(g);
-                if (hands[1][k] > 1)
+                if (gameState.hands(1,k) > 1)
                 {
                     g.setColor(0xFFFFFF);
                     g.fillRect(
@@ -125,7 +117,7 @@ class ShogiBan extends GameCanvas
                     );
                     g.setColor(LINE_COLOR);
                     g.drawString(
-                        Integer.toString(hands[1][k]),
+                        Integer.toString(gameState.hands(1,k)),
                         (k+1)*HANDS_CELL_WIDTH - 1 + BAN_OFFSET_X,
                         CELL_SIZE + OPPO_HAND_OFFSET_Y,
                         Graphics.RIGHT|Graphics.BOTTOM
@@ -135,20 +127,15 @@ class ShogiBan extends GameCanvas
             }
         }
 
-        colorField.paint(g);
-
-        for (int i = 0; i < 32; i++)
+        for (int row = 0; row < 9; row++)
         {
-            komaStamp.setFrame(i);
-            komaStamp.setPosition(
-                (i%8)*CELL_SIZE+BAN_OFFSET_X,
-                (i/8)*CELL_SIZE+BAN_OFFSET_Y
-            );
-            komaStamp.paint(g);
-
-            komaField.setCell(i%8,i/8+5, i+1);
+            for (int col = 0; col < 9; col++)
+            {
+                komaField.setCell(col, row, gameState.field(row, col));
+            }
         }
 
+        colorField.paint(g);
         komaField.paint(g);
 
         g.setColor(CURSOR_COLOR);
@@ -157,6 +144,52 @@ class ShogiBan extends GameCanvas
             curY*CELL_SIZE + BAN_OFFSET_Y,
             CELL_SIZE,
             CELL_SIZE
+        );
+
+        modeMark.setFrame(mode);
+        modeMark.paint(g);
+
+        g.setColor(LINE_COLOR);
+        int headerOffsetX = modeMark.getWidth() + SPACE;
+        if (gameState.stepLimit > 0)
+        {
+            String s = Integer.toString(gameState.stepLimit) + resWords[2];
+            g.drawString(
+                s,
+                headerOffsetX,
+                0,
+                Graphics.LEFT|Graphics.TOP
+            );
+            headerOffsetX += SMALL_FONT.stringWidth(s) + SPACE;
+        }
+        headerOffsetX += SMALL_FONT.stringWidth("000" + resWords[3]);
+        g.drawString(
+            Integer.toString(gameState.currentStep+1) + resWords[3],
+            headerOffsetX,
+            0,
+            Graphics.RIGHT|Graphics.TOP
+        );
+        headerOffsetX += SPACE;
+        g.drawString(
+            resWords[4 + (gameState.firstPlayer ^ gameState.currentPlayer)],
+            headerOffsetX,
+            0,
+            Graphics.LEFT|Graphics.TOP
+        );
+
+        g.setColor(LINE_COLOR);
+        g.setFont(SMALL_FONT);
+        g.drawString(
+            resWords[1-gameState.firstPlayer],
+            (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[1-gameState.firstPlayer]))/2,
+            OPPO_HAND_OFFSET_Y+(CELL_SIZE-SMALL_FONT.getHeight())/2,
+            Graphics.LEFT|Graphics.TOP
+        );
+        g.drawString(
+            resWords[gameState.firstPlayer],
+            (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[gameState.firstPlayer]))/2,
+            MY_HAND_OFFSET_Y+(CELL_SIZE-SMALL_FONT.getHeight())/2,
+            Graphics.LEFT|Graphics.TOP
         );
 
         flushGraphics();
@@ -185,50 +218,60 @@ class ShogiBan extends GameCanvas
         }
     }
 
-    void makeStaticImages()
+    void loadResources()
     {
+        InputStream is = getClass().getResourceAsStream("/text.txt");
+        try
         {
-            InputStream is = getClass().getResourceAsStream("/text.txt");
-            try
+            InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+            StringBuffer sb = new StringBuffer();
+            for (;;)
             {
-                InputStreamReader isr = new InputStreamReader(is, "UTF-8");
-                StringBuffer sb = new StringBuffer();
-                for (;;)
+                int ch = isr.read();
+                if (ch < 0)
                 {
-                    int ch = isr.read();
-                    if (ch < 0)
-                    {
-                        break;
-                    }
-                    sb.append((char)ch);
+                    break;
                 }
-                char[] chars = sb.toString().toCharArray();
-                resChars = new String[chars.length];
-                for (int i = 0; i < chars.length; i++)
+                sb.append((char)ch);
+            }
+            char[] chars = sb.toString().toCharArray();
+            resChars = new String[chars.length];
+            for (int i = 0; i < chars.length; i++)
+            {
+                resChars[i] = String.valueOf(chars[i]);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+        finally
+        {
+            if (is != null)
+            {
+                try
                 {
-                    resChars[i] = String.valueOf(chars[i]);
+                    is.close();
                 }
-            }
-            catch (Exception ex)
-            {
-                throw new RuntimeException(ex.toString());
-            }
-            finally
-            {
-                if (is != null)
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        is.close();
-                    }
-                    catch (Exception ex)
-                    {
-                    }
                 }
             }
         }
 
-        {
+        resWords = new String[6];
+
+        resWords[0] = resChars[31] + resChars[24]; // first player SEN-TE
+        resWords[1] = resChars[32] + resChars[24]; // second player GO-TE
+        resWords[2] = resChars[24] + resChars[25]+ resChars[26]; // step limit TE-DU-ME
+        resWords[3] = resChars[24] + resChars[33]; // step TE-ME
+        resWords[4] = resWords[0] + resChars[34]; // first player's turn SEN-TE-BAN
+        resWords[5] = resWords[1] + resChars[34]; // second player's turn GO-TE-BAN
+    }
+
+    void makeStaticImages()
+    {
+         {
             Image img = Image.createImage(DISP_W, DISP_H);
             Graphics g = img.getGraphics();
 
@@ -450,5 +493,31 @@ class ShogiBan extends GameCanvas
             colorField.setPosition(BAN_OFFSET_X, BAN_OFFSET_Y);
         }
 
+        // mode mark
+        {
+            int w = Math.max(
+                SMALL_FONT.stringWidth("PLAY"),
+                SMALL_FONT.stringWidth("EDIT")
+            );
+
+            Image img = Image.createImage(w, SMALL_FONT.getHeight()*2);
+            Graphics g = img.getGraphics();
+
+            g.setFont(SMALL_FONT);
+
+            g.setColor(0x00FF00);
+            g.fillRect(0, 0, img.getWidth(), img.getHeight()/2);
+            g.setColor(0x007F00);
+            g.drawString("PLAY", 0, 0, Graphics.LEFT|Graphics.TOP);
+
+            g.setColor(0xFF00FF);
+            g.fillRect(0, img.getHeight()/2, img.getWidth(), img.getHeight()/2);
+            g.setColor(0x7F007F);
+            g.drawString("EDIT", 0, img.getHeight()/2, Graphics.LEFT|Graphics.TOP);
+
+            img = Image.createImage(img);
+            modeMark = new Sprite(img, img.getWidth(), img.getHeight()/2);
+            modeMark.setPosition(0, 0);
+        }
     }
 }
