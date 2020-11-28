@@ -137,15 +137,6 @@ class ShogiBan extends GameCanvas
 
         colorField.paint(g);
         komaField.paint(g);
-
-        g.setColor(CURSOR_COLOR);
-        g.drawRect(
-            curX*CELL_SIZE + BAN_OFFSET_X,
-            curY*CELL_SIZE + BAN_OFFSET_Y,
-            CELL_SIZE,
-            CELL_SIZE
-        );
-
         modeMark.setFrame(mode);
         modeMark.paint(g);
 
@@ -192,30 +183,115 @@ class ShogiBan extends GameCanvas
             Graphics.LEFT|Graphics.TOP
         );
 
+
+        if (mode == 0)
+        {
+            g.setColor(CURSOR_COLOR);
+            if (curY < 9)
+            {
+                g.drawRect(
+                    curX*CELL_SIZE + BAN_OFFSET_X,
+                    curY*CELL_SIZE + BAN_OFFSET_Y,
+                    CELL_SIZE,
+                    CELL_SIZE
+                );
+            }
+            else if (curY == 9)
+            {
+                g.drawRect(
+                    curX*HANDS_CELL_WIDTH + BAN_OFFSET_X,
+                    MY_HAND_OFFSET_Y,
+                    HANDS_CELL_WIDTH,
+                    CELL_SIZE
+                );
+            }
+            else
+            {
+                g.drawRect(
+                    curX*HANDS_CELL_WIDTH + BAN_OFFSET_X,
+                    OPPO_HAND_OFFSET_Y,
+                    HANDS_CELL_WIDTH,
+                    CELL_SIZE
+                );
+            }
+        }
+
         flushGraphics();
     }
 
     protected void keyPressed(int keyCode)
     {
+        if (mode == 0)
+        {
+            movePlayModeCursor(keyCode);
+        }
+    }
+
+    private void movePlayModeCursor(int keyCode)
+    {
         switch (getGameAction(keyCode))
         {
         case Canvas.UP:
-            curY = (curY + 8) % 9;
-            render();
+            curY = (curY + 10) % 11;
+            if (curY == 10 && curX == 8)
+            {
+                curX = 7;
+            }
             break;
         case Canvas.DOWN:
-            curY = (curY + 1) % 9;
-            render();
+            curY = (curY + 1) % 11;
+            if (curY == 9 && curX == 8)
+            {
+                curX = 7;
+            }
             break;
         case Canvas.LEFT:
-            curX = (curX + 8) % 9;
-            render();
+            if (curY < 9)
+            {
+                curX = (curX + 8) % 9;
+            }
+            else
+            {
+                curX = (curX + 7) % 8;
+            }
             break;
         case Canvas.RIGHT:
-            curX = (curX + 1) % 9;
-            render();
+            if (curY < 9)
+            {
+                curX = (curX + 1) % 9;
+            }
+            else
+            {
+                curX = (curX + 1) % 8;
+            }
             break;
+        case Canvas.FIRE:
+            if (curY >= 9)
+            {
+                // TODO (select hands)
+                return;
+            }
+            if (!gameState.select(curY, curX))
+            {
+                return;
+            }
+            int frame = (gameState.isOpponent(curY, curX) ? 4 : 1) + 1;
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    colorField.setCell(
+                        col,
+                        row,
+                        gameState.canMoveTo(row, col) ? frame : 0
+                    );
+                }
+            }
+            break;
+        default:
+            return;
         }
+        render();
     }
 
     void loadResources()
@@ -466,20 +542,17 @@ class ShogiBan extends GameCanvas
 
         // color field
         {
-            Image img = Image.createImage(4*CELL_SIZE, CELL_SIZE);
+            Image img = Image.createImage(8*CELL_SIZE, CELL_SIZE);
             Graphics g = img.getGraphics();
 
-            g.setColor(0x0000FF);
-            g.fillRect(0, 0, CELL_SIZE, CELL_SIZE);
-
-            g.setColor(0xFF0000);
-            g.fillRect(CELL_SIZE, 0, CELL_SIZE, CELL_SIZE);
-
-            g.setColor(0x00FF00);
-            g.fillRect(2*CELL_SIZE, 0, CELL_SIZE, CELL_SIZE);
-
-            g.setColor(0x00FFFF);
-            g.fillRect(3*CELL_SIZE, 0, CELL_SIZE, CELL_SIZE);
+            for (int i = 0; i < 8; i++)
+            {
+                int c = (((i>>0) & 1) * 0xFF)
+                      | (((i>>1) & 1) * 0xFF00)
+                      | (((i>>2) & 1) * 0xFF0000);
+                g.setColor(c);
+                g.fillRect(i*CELL_SIZE, 0, CELL_SIZE, CELL_SIZE);
+            }
 
             int[] rgbData = new int[img.getWidth() * img.getHeight()];
             img.getRGB(rgbData, 0, img.getWidth(), 0, 0, img.getWidth(), img.getHeight());
