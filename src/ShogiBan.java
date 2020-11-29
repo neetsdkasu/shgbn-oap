@@ -376,32 +376,57 @@ class ShogiBan extends GameCanvas
         render();
     }
 
+    private void showMovable(boolean isCurrentPlayer)
+    {
+        int frame = (isCurrentPlayer ? 2 : 4) + 1;
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                colorField.setCell(
+                    col,
+                    row,
+                    game.canMoveTo(row, col) ? frame : 0
+                );
+            }
+        }
+    }
+
     private boolean firePlayeMode()
     {
         switch (state)
         {
         case 0:
+        case 4:
             if (curY >= 9)
             {
-                // TODO (select hands)
+                if (game.selectHand(curY - 9, curX))
+                {
+                    state = 3;
+                    selX = curX;
+                    selY = curY;
+                    showMovable(curY - 9 == game.currentPlayer);
+                    return true;
+                }
+                if (state == 4)
+                {
+                    state = 0;
+                    colorField.fillCells(0, 0, 9, 9, 0);
+                    return true;
+                }
                 return false;
             }
             if (!game.select(curY, curX))
             {
+                if (state == 4)
+                {
+                    state = 0;
+                    colorField.fillCells(0, 0, 9, 9, 0);
+                    return true;
+                }
                 return false;
             }
-            int frame = (game.isCurrentPlayer(curY, curX) ? 2 : 4) + 1;
-            for (int row = 0; row < 9; row++)
-            {
-                for (int col = 0; col < 9; col++)
-                {
-                    colorField.setCell(
-                        col,
-                        row,
-                        game.canMoveTo(row, col) ? frame : 0
-                    );
-                }
-            }
+            showMovable(game.isCurrentPlayer(curY, curX));
             if (game.isCurrentPlayer(curY, curX))
             {
                 selX = curX;
@@ -428,11 +453,19 @@ class ShogiBan extends GameCanvas
                     return true;
                 }
             }
-            else if (curY >= 9 || game.field(curY, curX) != 0)
+            else if (curY >= 9 || !game.isEmpty(curY, curX))
             {
-                state = 0;
+                state = 4;
                 return firePlayeMode();
             }
+            break;
+        case 3:
+            if (curY >= 9 || !game.isEmpty(curY, curX))
+            {
+                state = 4;
+                return firePlayeMode();
+            }
+            break;
         }
         return false;
     }

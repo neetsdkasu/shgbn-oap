@@ -161,13 +161,21 @@ class Game extends Board
                     int k = kind(tmpRow, tmpCol);
                     if (k == HI || k == RYU)
                     {
-                        foundHI = true;
-                        break;
+                        if (len > 1)
+                        {
+                            foundHI = true;
+                            break;
+                        }
+                        guardian[row][col] |= (1 << (4-3*dr-dc));
                     }
-                    if (k == KYO && dr == 1 - 2*player)
+                    else if (k == KYO && dr == 1 - 2*player)
                     {
-                        foundHI = true;
-                        break;
+                        if (len > 1)
+                        {
+                            foundHI = true;
+                            break;
+                        }
+                        guardian[row][col] |= (1 << (4-3*dr-dc));
                     }
                     defCount++;
                 }
@@ -191,7 +199,7 @@ class Game extends Board
                     ? (0x1FF ^ (1 << 1) ^ (1 << 7))
                     : (0x1FF ^ (1 << 3) ^ (1 << 5));
             }
-            else
+            else if (defCount == 0)
             {
                 while (len > 0)
                 {
@@ -227,8 +235,12 @@ class Game extends Board
                         int k = kind(tmpRow, tmpCol);
                         if (k == KAKU || k == UMA)
                         {
-                            foundKAKU = true;
-                            break;
+                            if (len > 1)
+                            {
+                                foundKAKU = true;
+                                break;
+                            }
+                            guardian[row][col] |= (1 << (4-3*dr-dc));
                         }
                         defCount++;
                     }
@@ -252,7 +264,7 @@ class Game extends Board
                         ? (0x1FF ^ (1 << 0) ^ (1 << 8))
                         : (0x1FF ^ (1 << 2) ^ (1 << 6));
                 }
-                else
+                else if (defCount == 0)
                 {
                     while (len > 0)
                     {
@@ -373,6 +385,132 @@ class Game extends Board
     boolean isRankUpRow(int player, int row)
     {
         return player == 0 ? (row <= 2) : (row >= 6);
+    }
+
+    boolean selectHand(int player, int kind)
+    {
+        if (hands(player, kind) == 0)
+        {
+            return false;
+        }
+
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                movable[row][col] = isEmpty(row, col);
+            }
+        }
+
+        switch (kind+1)
+        {
+        case FU:
+            omit2FU(player);
+            omitUchiFU(player);
+        case KYO:
+            for (int col = 0; col < 9; col++)
+            {
+                movable[8*player][col] = false;
+            }
+            break;
+        case KEI:
+            for (int col = 0; col < 9; col++)
+            {
+                movable[8*player][col] = false;
+                movable[6*player+1][col] = false;
+            }
+            break;
+        default:
+            break;
+        }
+
+        if (danger[player])
+        {
+            filterDanger(player);
+        }
+
+        return true;
+    }
+
+    private void omitUchiFU(int player)
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                switch (kind(row, col))
+                {
+                case GYOKU:
+                case OU:
+                    if (has(1^player, row, col))
+                    {
+                        int tmpRow = row + 1 - 2*player;
+                        if (!inField(tmpRow, col) || !isEmpty(tmpRow, col))
+                        {
+                            break;
+                        }
+                        int count = 0;
+                        for (int dr = -1; dr < 2; dr++)
+                        {
+                            for (int dc = -1; dc < 2; dc++)
+                            {
+                                if (!inField(row+dr, col+dc))
+                                {
+                                    count++;
+                                }
+                                else if (!isEmpty(row+dr, col+dc))
+                                {
+                                    count++;
+                                }
+                                else if (getRange(player, row+dr, col+dc) > 0)
+                                {
+                                    count++;
+                                }
+                            }
+                        }
+                        if (count < 9)
+                        {
+                            break;
+                        }
+                        if (getRange(1^player, tmpRow, col) != 1)
+                        {
+                            break;
+                        }
+                        if (getRange(player, tmpRow, col) > 0)
+                        {
+                            movable[tmpRow][col] = false;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    private void omit2FU(int player)
+    {
+        for (int col = 0; col < 9; col++)
+        {
+            for (int row = 0; row < 9; row++)
+            {
+                if (kind(row, col) != FU)
+                {
+                    continue;
+                }
+                if (!has(player, row, col))
+                {
+                    continue;
+                }
+                // dangerous using variable !
+                for (row = 0; row < 9; row++)
+                {
+                    movable[row][col] = false;
+                }
+                break;
+            }
+        }
     }
 
     boolean move(int fromRow, int fromCol, int toRow, int toCol)
@@ -699,16 +837,14 @@ class Game extends Board
 
     private void fillMovableKEI(int row, int col)
     {
+        if (guardian[row][col] != 0)
+        {
+            return;
+        }
         boolean opponent = isOpponent(row, col);
-        int dr = opponent ? 2 : -2;
-        if (canGoTo(row, col, dr, -1))
-        {
-            setMovable(row+dr, col-1, opponent);
-        }
-        if (canGoTo(row, col, dr, 1))
-        {
-            setMovable(row+dr, col+1, opponent);
-        }
+        int tmpRow = opponent ? (row+2) : (row-2);
+        setMovable(tmpRow, col-1, opponent);
+        setMovable(tmpRow, col+1, opponent);
     }
 
     private void fillMovableKYO(int row, int col)
