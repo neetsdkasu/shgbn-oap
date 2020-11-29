@@ -24,11 +24,28 @@ abstract class Board
     public abstract int getStepLimit();
     public abstract String getTitle();
 
+    public final boolean has(int player, int row, int col)
+    {
+        return player == whose(row, col);
+    }
+
+    public final int whose(int row, int col)
+    {
+        return isOpponent(row, col)
+            ? 1
+            : Math.min(0, field(row, col) - 1);
+    }
+
     public final int kind(int row, int col)
     {
         return isOpponent(row, col)
             ? field(row, col) - OPPONENT
             : field(row, col);
+    }
+
+    public final boolean isEmpty(int row, int col)
+    {
+        return field(row, col) == 0;
     }
 
     public final boolean isOpponent(int row, int col)

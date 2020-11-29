@@ -23,6 +23,9 @@ class Game extends Board
     final int[][] currentField, currentHands;
     final boolean[][] movable;
     final int[][][] range;
+    final int[][] guardian;
+    final boolean[][][] dangerZone;
+    final boolean[] danger;
 
     Game(Problem p)
     {
@@ -30,6 +33,9 @@ class Game extends Board
         currentHands = new int[2][8];
         movable = new boolean[9][9];
         range = new int[2][9][9];
+        guardian = new int[9][9];
+        dangerZone = new boolean[2][9][9];
+        danger = new boolean[2];
         problem = p;
     }
 
@@ -57,10 +63,213 @@ class Game extends Board
                 currentHands[i].length
             );
         }
-        resetRange();
+        clearOute();
+        calcRange();
+        checkOute();
     }
 
-    private void resetRange()
+    boolean isDanger()
+    {
+        return danger[currentPlayer];
+    }
+
+    private void clearOute()
+    {
+        danger[0] = false;
+        danger[1] = false;
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                guardian[row][col] = 0;
+                dangerZone[0][row][col] = false;
+                dangerZone[1][row][col] = false;
+            }
+        }
+    }
+
+    private void checkOute()
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                switch (kind(row, col))
+                {
+                case GYOKU:
+                case OU:
+                    int player = whose(row, col);
+                    if (getRange(1^player, row, col) > 0)
+                    {
+                        danger[player] = true;
+                        checkOuteAround(player, row, col);
+                    }
+                    checkOutePathHI(row, col);
+                    checkOutePathKAKU(row, col);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    private void checkOuteAround(int player, int row, int col)
+    {
+        for (int dr = -2; dr <= 2; dr++)
+        {
+            int tmpRow = row + dr;
+            for (int dc = -1; dc < 2; dc++)
+            {
+                int tmpCol = col + dc;
+                if (!inField(tmpRow, tmpCol))
+                {
+                    continue;
+                }
+                if (!has(1^player, tmpRow, tmpCol))
+                {
+                    continue;
+                }
+                if (!select(tmpRow, tmpCol))
+                {
+                    continue;
+                }
+                dangerZone[player][tmpRow][tmpCol] |= movable[row][col];
+            }
+        }
+    }
+
+    private void checkOutePathHI(int row, int col)
+    {
+        int player = whose(row, col);
+        for (int d = 0; d < 4; d++)
+        {
+            int dd = d >> 1;
+            int dm = 2 * (d & 1) - 1;
+            int dr = (1 - dd) * dm;
+            int dc = dd * dm;
+            int defRow = -1, defCol = -1;
+            int defCount = 0;
+            boolean foundHI = false;
+            int tmpRow = row + dr;
+            int tmpCol = col + dc;
+            int len = 1;
+            while (inField(tmpRow, tmpCol) && defCount < 2)
+            {
+                if (has(1^player, tmpRow, tmpCol))
+                {
+                    int k = kind(tmpRow, tmpCol);
+                    if (k == HI || k == RYU)
+                    {
+                        foundHI = true;
+                        break;
+                    }
+                    if (k == KYO && dr == 1 - 2*player)
+                    {
+                        foundHI = true;
+                        break;
+                    }
+                    defCount++;
+                }
+                else if (has(player, tmpRow, tmpCol))
+                {
+                    defRow = tmpRow;
+                    defCol = tmpCol;
+                    defCount++;
+                }
+                tmpRow += dr;
+                tmpCol += dc;
+                len++;
+            }
+            if (!foundHI || defCount >= 2)
+            {
+                continue;
+            }
+            if (defRow >= 0)
+            {
+                guardian[defRow][defCol] |= (dr != 0)
+                    ? (0x1FF ^ (1 << 1) ^ (1 << 7))
+                    : (0x1FF ^ (1 << 3) ^ (1 << 5));
+            }
+            else
+            {
+                while (len > 0)
+                {
+                    dangerZone[player][tmpRow][tmpCol] = true;
+                    tmpRow -= dr;
+                    tmpCol -= dc;
+                    len--;
+                }
+                guardian[row][col] |= (dr != 0)
+                    ? ((1 << 1) | (1 << 7))
+                    : ((1 << 3) | (1 << 5));
+            }
+        }
+    }
+
+    private void checkOutePathKAKU(int row, int col)
+    {
+        int player = whose(row, col);
+        for (int dr = -1; dr < 2; dr += 2)
+        {
+            for (int dc = -1; dc < 2; dc += 2)
+            {
+                int defRow = -1, defCol = -1;
+                int defCount = 0;
+                boolean foundKAKU = false;
+                int tmpRow = row + dr;
+                int tmpCol = col + dc;
+                int len = 1;
+                while (inField(tmpRow, tmpCol) && defCount < 2)
+                {
+                    if (has(1^player, tmpRow, tmpCol))
+                    {
+                        int k = kind(tmpRow, tmpCol);
+                        if (k == KAKU || k == UMA)
+                        {
+                            foundKAKU = true;
+                            break;
+                        }
+                        defCount++;
+                    }
+                    else if (has(player, tmpRow, tmpCol))
+                    {
+                        defRow = tmpRow;
+                        defCol = tmpCol;
+                        defCount++;
+                    }
+                    tmpRow += dr;
+                    tmpCol += dc;
+                    len++;
+                }
+                if (!foundKAKU || defCount >= 2)
+                {
+                    continue;
+                }
+                if (defRow >= 0)
+                {
+                    guardian[defRow][defCol] |= (dr == dc)
+                        ? (0x1FF ^ (1 << 0) ^ (1 << 8))
+                        : (0x1FF ^ (1 << 2) ^ (1 << 6));
+                }
+                else
+                {
+                    while (len > 0)
+                    {
+                        dangerZone[player][tmpRow][tmpCol] = true;
+                        tmpRow -= dr;
+                        tmpCol -= dc;
+                        len--;
+                    }
+                    guardian[row][col] |= (dr == dc)
+                        ? ((1 << 0) | (1 << 8))
+                        : ((1 << 2) | (1 << 6));
+                }
+            }
+        }
+    }
+
+    private void calcRange()
     {
         for (int i = 0; i < 2; i++)
         {
@@ -94,20 +303,6 @@ class Game extends Board
                 if (movable[row][col])
                 {
                     range[player][row][col]++;
-                }
-            }
-        }
-    }
-
-    private void removeRange(int player)
-    {
-        for (int row = 0; row < 9; row++)
-        {
-            for (int col = 0; col < 9; col++)
-            {
-                if (movable[row][col])
-                {
-                    range[player][row][col]--;
                 }
             }
         }
@@ -222,21 +417,18 @@ class Game extends Board
         {
             rankUp = needRankUp(fromRow, fromCol, toRow);
         }
-        select(fromRow, fromCol, false);
-        removeRange(currentPlayer);
-        if (field(toRow, toCol) != 0)
+        if (!isEmpty(toRow, toCol))
         {
-            select(toRow, toCol, false);
-            removeRange(1^currentPlayer);
             currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]++;
         }
         currentField[toRow][toCol] = currentField[fromRow][fromCol]
                                    + (rankUp ? 8 : 0);
         currentField[fromRow][fromCol] = 0;
-        select(toRow, toCol, false);
-        addRange(currentPlayer);
         currentStep++;
         currentPlayer ^= 1;
+        clearOute();
+        calcRange();
+        checkOute();
         return true;
     }
 
@@ -247,7 +439,7 @@ class Game extends Board
 
     boolean select(int row, int col, boolean useRange)
     {
-        if (field(row, col) == 0)
+        if (isEmpty(row, col))
         {
             return false;
         }
@@ -279,7 +471,7 @@ class Game extends Board
             break;
         case GYOKU:
             fillMovableGYOKU(row, col, useRange);
-            break;
+            return true;
         case TO:
         case NKYO:
         case NKEI:
@@ -294,10 +486,28 @@ class Game extends Board
             break;
         case OU:
             fillMovableGYOKU(row, col, useRange);
-            break;
+            return true;
+        }
+
+        int player = whose(row, col);
+        if (danger[player])
+        {
+            filterDanger(player);
         }
 
         return true;
+    }
+
+    private void filterDanger(int player)
+    {
+        boolean[][] zone = dangerZone[player];
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                movable[row][col] &= zone[row][col];
+            }
+        }
     }
 
     int getRange(int player, int row, int col)
@@ -309,9 +519,7 @@ class Game extends Board
 
     boolean isCurrentPlayer(int row, int col)
     {
-        return currentPlayer == 0
-            ? isMine(row, col)
-            : isOpponent(row, col);
+        return has(currentPlayer, row, col);
     }
 
     boolean canMoveTo(int row, int col)
@@ -331,6 +539,12 @@ class Game extends Board
         return movable[row][col];
     }
 
+    boolean canGoTo(int row, int col, int dr, int dc)
+    {
+        return inField(row+dr, col+dc)
+            && (guardian[row][col] & (1 << (4+3*dr+dc))) == 0;
+    }
+
     private boolean setMovable(int row, int col, boolean opponent)
     {
         if (!inField(row, col))
@@ -342,26 +556,18 @@ class Game extends Board
             ? !isOpponent(row, col)
             : !isMine(row, col);
 
-        return field(row, col) != 0;
+        return !isEmpty(row, col);
     }
 
     private void fillMovableRYU(int row, int col)
     {
-        boolean opponent = isOpponent(row, col);
-        setMovable(row+1, col+1, opponent);
-        setMovable(row+1, col-1, opponent);
-        setMovable(row-1, col+1, opponent);
-        setMovable(row-1, col-1, opponent);
+        fillMovableGIN(row, col);
         fillMovableHI(row, col);
     }
 
     private void fillMovableUMA(int row, int col)
     {
-        boolean opponent = isOpponent(row, col);
-        setMovable(row+1, col, opponent);
-        setMovable(row+1, col, opponent);
-        setMovable(row, col+1, opponent);
-        setMovable(row, col-1, opponent);
+        fillMovableKIN(row, col);
         fillMovableKAKU(row, col);
     }
 
@@ -374,6 +580,10 @@ class Game extends Board
             for (int dc = -1; dc < 2; dc++)
             {
                 if (dc == 0 && dr == 0)
+                {
+                    continue;
+                }
+                if (!canGoTo(row, col, dr, dc))
                 {
                     continue;
                 }
@@ -391,6 +601,10 @@ class Game extends Board
         boolean opponent = isOpponent(row, col);
         for (int dr = -1; dr < 2; dr += 2)
         {
+            if (!canGoTo(row, col, dr, 0))
+            {
+                continue;
+            }
             for (int tmpRow = row+dr; true; tmpRow += dr)
             {
                 if (setMovable(tmpRow, col, opponent))
@@ -401,6 +615,10 @@ class Game extends Board
         }
         for (int dc = -1; dc < 2; dc += 2)
         {
+            if (!canGoTo(row, col, 0, dc))
+            {
+                continue;
+            }
             for (int tmpCol = col+dc; true; tmpCol += dc)
             {
                 if (setMovable(row, tmpCol, opponent))
@@ -418,6 +636,10 @@ class Game extends Board
         {
             for (int dc = -1; dc < 2; dc += 2)
             {
+                if (!canGoTo(row, col, dr, dc))
+                {
+                    continue;
+                }
                 int tmpRow = row + dr;
                 int tmpCol = col + dc;
                 for (;;)
@@ -450,6 +672,10 @@ class Game extends Board
                 {
                     continue;
                 }
+                if (!canGoTo(row, col, dr, dc))
+                {
+                    continue;
+                }
                 setMovable(tmpRow, col+dc, opponent);
             }
         }
@@ -459,42 +685,54 @@ class Game extends Board
     {
         fillMovableFU(row, col);
         boolean opponent = isOpponent(row, col);
-        setMovable(row+1, col+1, opponent);
-        setMovable(row+1, col-1, opponent);
-        setMovable(row-1, col+1, opponent);
-        setMovable(row-1, col-1, opponent);
+        for (int dr = -1; dr < 2; dr += 2)
+        {
+            for (int dc = -1; dc < 2; dc += 2)
+            {
+                if (canGoTo(row, col, dr, dc))
+                {
+                    setMovable(row+dr, col+dc, opponent);
+                }
+            }
+        }
     }
 
     private void fillMovableKEI(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
-        int tmpRow = opponent ? (row+2) : (row-2);
-        setMovable(tmpRow, col-1, opponent);
-        setMovable(tmpRow, col+1, opponent);
+        int dr = opponent ? 2 : -2;
+        if (canGoTo(row, col, dr, -1))
+        {
+            setMovable(row+dr, col-1, opponent);
+        }
+        if (canGoTo(row, col, dr, 1))
+        {
+            setMovable(row+dr, col+1, opponent);
+        }
     }
 
     private void fillMovableKYO(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
         int dr = opponent ? 1 : -1;
-        for (int tmpRow = row+dr; true; tmpRow += dr)
+        if (!canGoTo(row, col, dr, 0))
         {
-            if (setMovable(tmpRow, col, opponent))
-            {
-                break;
-            }
+            return;
+        }
+        int tmpRow = row + dr;
+        while (!setMovable(tmpRow, col, opponent))
+        {
+            tmpRow += dr;
         }
     }
 
     private void fillMovableFU(int row, int col)
     {
-        if (isOpponent(row, col))
+        boolean opponent = isOpponent(row, col);
+        int dr = opponent ? 1 : -1;
+        if (canGoTo(row, col, dr, 0))
         {
-            setMovable(row+1, col, true);
-        }
-        else
-        {
-            setMovable(row-1, col, false);
+            setMovable(row+dr, col, opponent);
         }
     }
 }

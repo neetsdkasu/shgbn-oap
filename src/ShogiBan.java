@@ -190,6 +190,10 @@ class ShogiBan extends GameCanvas
 
     private void renderGameInfo(Graphics g, int headerOffsetX)
     {
+        g.setFont(SMALL_FONT);
+        g.setColor(LINE_COLOR);
+
+        // ??? TE-ME
         headerOffsetX += SMALL_FONT.stringWidth("000" + resWords[3]);
         g.drawString(
             Integer.toString(game.currentStep+1) + resWords[3],
@@ -197,6 +201,8 @@ class ShogiBan extends GameCanvas
             0,
             Graphics.RIGHT|Graphics.TOP
         );
+
+        // SEN-TE-BAN | GO-TE-BAN
         headerOffsetX += SPACE;
         g.drawString(
             resWords[4 + (game.firstPlayer ^ game.currentPlayer)],
@@ -205,8 +211,21 @@ class ShogiBan extends GameCanvas
             Graphics.LEFT|Graphics.TOP
         );
 
-        g.setColor(LINE_COLOR);
-        g.setFont(SMALL_FONT);
+        // OU-TE
+        if (game.isDanger())
+        {
+            headerOffsetX += SMALL_FONT.stringWidth(
+                resWords[4 + (game.firstPlayer ^ game.currentPlayer)]
+            ) + SPACE;
+            g.drawString(
+                resWords[9],
+                headerOffsetX,
+                0,
+                Graphics.LEFT|Graphics.TOP
+            );
+        }
+
+        // SEN-TE GO-TE
         g.drawString(
             resWords[1^game.firstPlayer],
             (BAN_OFFSET_X-SMALL_FONT.stringWidth(resWords[1^game.firstPlayer]))/2,
@@ -397,9 +416,9 @@ class ShogiBan extends GameCanvas
                 {
                     if (!game.needRankUp(selY, selX, curY))
                     {
-                        state = 2;
-                        openMenu(1);
-                        return true;
+                        // state = 2;
+                        // openMenu(1);
+                        // return true;
                     }
                 }
                 if (game.move(selY, selX, curY, curX))
@@ -459,7 +478,7 @@ class ShogiBan extends GameCanvas
             }
         }
 
-        resWords = new String[9];
+        resWords = new String[10];
 
         resWords[0] = resChars[31] + resChars[24]; // first player SEN-TE
         resWords[1] = resChars[32] + resChars[24]; // second player GO-TE
@@ -470,6 +489,7 @@ class ShogiBan extends GameCanvas
         resWords[6] = resChars[29] + resChars[30]; // rank up NA-RU
         resWords[7] = resChars[28] + resChars[29]; // keep rank FU-NARI
         resWords[8] = resChars[35] + resChars[36]; // cancel TORI-KESHI
+        resWords[9] = resChars[23] + resChars[24]; // check OU-TE
     }
 
     void makeStaticImages()
