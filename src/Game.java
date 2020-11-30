@@ -387,6 +387,26 @@ class Game extends Board
         return player == 0 ? (row <= 2) : (row >= 6);
     }
 
+    boolean put(int kind, int row, int col)
+    {
+        if (!selectHand(currentPlayer, kind))
+        {
+            return false;
+        }
+
+        if (!canMoveTo(row, col))
+        {
+            return false;
+        }
+
+        currentHands[currentPlayer][kind]--;
+        currentField[row][col] = (kind + 1) + OPPONENT*currentPlayer;
+
+        switchNextPlayer();
+
+        return true;
+    }
+
     boolean selectHand(int player, int kind)
     {
         if (hands(player, kind) == 0)
@@ -531,14 +551,17 @@ class Game extends Board
         {
             return false;
         }
+
         if (!select(fromRow, fromCol))
         {
             return false;
         }
+
         if (!canMoveTo(toRow, toCol))
         {
             return false;
         }
+
         if (rankUp)
         {
             int k = kind(fromRow, fromCol);
@@ -555,6 +578,7 @@ class Game extends Board
         {
             rankUp = needRankUp(fromRow, fromCol, toRow);
         }
+
         if (!isEmpty(toRow, toCol))
         {
             currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]++;
@@ -562,12 +586,19 @@ class Game extends Board
         currentField[toRow][toCol] = currentField[fromRow][fromCol]
                                    + (rankUp ? 8 : 0);
         currentField[fromRow][fromCol] = 0;
+
+        switchNextPlayer();
+
+        return true;
+    }
+
+    private void switchNextPlayer()
+    {
         currentStep++;
         currentPlayer ^= 1;
         clearOute();
         calcRange();
         checkOute();
-        return true;
     }
 
     boolean select(int row, int col)

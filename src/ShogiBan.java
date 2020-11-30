@@ -465,6 +465,12 @@ class ShogiBan extends GameCanvas
                 state = 4;
                 return firePlayeMode();
             }
+            if (game.put(selX, curY, curX))
+            {
+                state = 0;
+                colorField.fillCells(0, 0, 9, 9, 0);
+                return true;
+            }
             break;
         }
         return false;
