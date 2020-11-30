@@ -123,30 +123,11 @@ class ShogiBan extends GameCanvas
         flushGraphics();
     }
 
-    private void renderRankUpMenu(Graphics g)
-    {
-        g.setColor(0xE0E0E0);
-        g.fillRect(40, 100, 60, 60);
-        g.setColor(0xFFFF00);
-        g.fillRect(40, 100, 60, 20);
-        g.setColor(LINE_COLOR);
-        g.drawRect(40, 100, 60, 20);
-        g.drawRect(40, 120, 60, 20);
-        g.drawRect(40, 140, 60, 20);
-        g.drawString(resWords[6], 40, 100, Graphics.LEFT|Graphics.TOP);
-        g.drawString(resWords[7], 40, 120, Graphics.LEFT|Graphics.TOP);
-        g.drawString(resWords[8], 40, 140, Graphics.LEFT|Graphics.TOP);
-        g.setColor(0x7F7F7F);
-        g.drawRect(39, 99, 62, 62);
-        g.setColor(RED);
-        g.drawRect(40, 100, 60, 20);
-    }
-
     private void renderCursor(Graphics g)
     {
         if (isGameMode())
         {
-            if (state == 1)
+            if (state != 0)
             {
                 renderBanCursor(g, selX, selY, 0x00FF00);
             }
@@ -216,12 +197,22 @@ class ShogiBan extends GameCanvas
             headerOffsetX += SMALL_FONT.stringWidth(
                 resWords[4 + (game.firstPlayer ^ game.currentPlayer)]
             ) + SPACE;
-            g.drawString(
-                resWords[9],
+            String msg = resWords[game.isCheckmate() ? 10 : 9];
+            g.setColor(game.isCheckmate() ? LINE_COLOR : RED);
+            g.fillRect(
                 headerOffsetX,
+                0,
+                SMALL_FONT.stringWidth(msg) + 3,
+                SMALL_FONT.getHeight()
+            );
+            g.setColor(0xFFFFFF);
+            g.drawString(
+                msg,
+                headerOffsetX + 2,
                 0,
                 Graphics.LEFT|Graphics.TOP
             );
+            g.setColor(LINE_COLOR);
         }
 
         // SEN-TE GO-TE
@@ -413,7 +404,8 @@ class ShogiBan extends GameCanvas
 
     private void showMovable(boolean isCurrentPlayer)
     {
-        int frame = (isCurrentPlayer ? 2 : 4) + 1;
+        int another = 4 - 3*game.currentPlayer;
+        int frame = (isCurrentPlayer ? 2 : another) + 1;
         for (int row = 0; row < 9; row++)
         {
             for (int col = 0; col < 9; col++)
@@ -437,9 +429,12 @@ class ShogiBan extends GameCanvas
             {
                 if (game.selectHand(curY - 9, curX))
                 {
-                    state = 3;
-                    selX = curX;
-                    selY = curY;
+                    if (game.currentPlayer == curY - 9)
+                    {
+                        state = 3;
+                        selX = curX;
+                        selY = curY;
+                    }
                     showMovable(curY - 9 == game.currentPlayer);
                     return true;
                 }
@@ -552,7 +547,7 @@ class ShogiBan extends GameCanvas
             }
         }
 
-        resWords = new String[10];
+        resWords = new String[11];
 
         resWords[0] = resChars[31] + resChars[24]; // first player SEN-TE
         resWords[1] = resChars[32] + resChars[24]; // second player GO-TE
@@ -564,6 +559,7 @@ class ShogiBan extends GameCanvas
         resWords[7] = resChars[28] + resChars[29]; // keep rank FU-NARI
         resWords[8] = resChars[35] + resChars[36]; // cancel TORI-KESHI
         resWords[9] = resChars[23] + resChars[24]; // check OU-TE
+        resWords[10] = resChars[25] + resChars[27]; // step TSU-MI
     }
 
     void makeStaticImages()

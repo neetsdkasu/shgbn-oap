@@ -25,7 +25,7 @@ class Game extends Board
     final int[][][] range;
     final int[][] guardian;
     final boolean[][][] dangerZone;
-    final boolean[] danger;
+    final boolean[] danger, checkmate;
 
     Game(Problem p)
     {
@@ -36,6 +36,7 @@ class Game extends Board
         guardian = new int[9][9];
         dangerZone = new boolean[2][9][9];
         danger = new boolean[2];
+        checkmate = new boolean[2];
         problem = p;
     }
 
@@ -75,8 +76,11 @@ class Game extends Board
 
     private void clearOute()
     {
-        danger[0] = false;
-        danger[1] = false;
+        for (int i = 0; i < 2; i++)
+        {
+            danger[i] = false;
+            checkmate[i] = false;
+        }
         for (int row = 0; row < 9; row++)
         {
             for (int col = 0; col < 9; col++)
@@ -99,19 +103,76 @@ class Game extends Board
                 case GYOKU:
                 case OU:
                     int player = whose(row, col);
+                    checkOutePathHI(row, col);
+                    checkOutePathKAKU(row, col);
                     if (getRange(1^player, row, col) > 0)
                     {
                         danger[player] = true;
                         checkOuteAround(player, row, col);
                     }
-                    checkOutePathHI(row, col);
-                    checkOutePathKAKU(row, col);
                     break;
                 default:
                     break;
                 }
             }
         }
+        for (int i = 0; i < 2; i++)
+        {
+            if (danger[i])
+            {
+                checkmate[i] = calcCheckmate(i);
+            }
+        }
+    }
+
+    boolean isCheckmate()
+    {
+        return checkmate[currentPlayer];
+    }
+
+    private boolean calcCheckmate(int player)
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                if (!has(player, row, col))
+                {
+                    continue;
+                }
+                select(row, col);
+                if (hasAnyMovable())
+                {
+                    return false;
+                }
+            }
+        }
+        for (int k = 0; k < 8; k++)
+        {
+            if (selectHand(player, k))
+            {
+                if (hasAnyMovable())
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean hasAnyMovable()
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                if (movable[row][col])
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void checkOuteAround(int player, int row, int col)
@@ -298,23 +359,49 @@ class Game extends Board
         {
             for (int col = 0; col < 9; col++)
             {
-                if (select(row, col, false))
+                switch (kind(row, col))
                 {
-                    addRange(isOpponent(row, col) ? 1 : 0);
-                }
-            }
-        }
-    }
-
-    private void addRange(int player)
-    {
-        for (int row = 0; row < 9; row++)
-        {
-            for (int col = 0; col < 9; col++)
-            {
-                if (movable[row][col])
-                {
-                    range[player][row][col]++;
+                case FU:
+                    fillRangeFU(row, col);
+                    break;
+                case KYO:
+                    fillRangeKYO(row, col);
+                    break;
+                case KEI:
+                    fillRangeKEI(row, col);
+                    break;
+                case GIN:
+                    fillRangeGIN(row, col);
+                    break;
+                case KIN:
+                    fillRangeKIN(row, col);
+                    break;
+                case KAKU:
+                    fillRangeKAKU(row, col);
+                    break;
+                case HI:
+                    fillRangeHI(row, col);
+                    break;
+                case GYOKU:
+                    fillRangeGYOKU(row, col);
+                    break;
+                case TO:
+                case NKYO:
+                case NKEI:
+                case NGIN:
+                    fillRangeKIN(row, col);
+                    break;
+                case UMA:
+                    fillRangeUMA(row, col);
+                    break;
+                case RYU:
+                    fillRangeRYU(row, col);
+                    break;
+                case OU:
+                    fillRangeGYOKU(row, col);
+                    break;
+                default:
+                    break;
                 }
             }
         }
@@ -609,11 +696,6 @@ class Game extends Board
 
     boolean select(int row, int col)
     {
-        return select(row, col, true);
-    }
-
-    boolean select(int row, int col, boolean useRange)
-    {
         if (isEmpty(row, col))
         {
             return false;
@@ -645,7 +727,7 @@ class Game extends Board
             fillMovableHI(row, col);
             break;
         case GYOKU:
-            fillMovableGYOKU(row, col, useRange);
+            fillMovableGYOKU(row, col);
             return true;
         case TO:
         case NKYO:
@@ -660,7 +742,7 @@ class Game extends Board
             fillMovableRYU(row, col);
             break;
         case OU:
-            fillMovableGYOKU(row, col, useRange);
+            fillMovableGYOKU(row, col);
             return true;
         }
 
@@ -746,7 +828,7 @@ class Game extends Board
         fillMovableKAKU(row, col);
     }
 
-    private void fillMovableGYOKU(int row, int col, boolean useRange)
+    private void fillMovableGYOKU(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
         for (int dr = -1; dr < 2; dr++)
@@ -762,7 +844,7 @@ class Game extends Board
                 {
                     continue;
                 }
-                if (useRange && getRange(opponent ? 0 : 1, tmpRow, col+dc) > 0)
+                if (getRange(opponent ? 0 : 1, tmpRow, col+dc) > 0)
                 {
                     continue;
                 }
@@ -907,5 +989,151 @@ class Game extends Board
         {
             setMovable(row+dr, col, opponent);
         }
+    }
+
+    private boolean addRange(int player, int row, int col)
+    {
+        if (!inField(row, col))
+        {
+            return true;
+        }
+        range[player][row][col]++;
+        return !isEmpty(row, col);
+    }
+
+    private void fillRangeRYU(int row, int col)
+    {
+        fillRangeGIN(row, col);
+        fillRangeHI(row, col);
+    }
+
+    private void fillRangeUMA(int row, int col)
+    {
+        fillRangeKIN(row, col);
+        fillRangeKAKU(row, col);
+    }
+
+    private void fillRangeGYOKU(int row, int col)
+    {
+        int player = whose(row, col);
+        for (int dr = -1; dr < 2; dr++)
+        {
+            int tmpRow = row + dr;
+            for (int dc = -1; dc < 2; dc++)
+            {
+                if (dc == 0 && dr == 0)
+                {
+                    continue;
+                }
+                addRange(player, tmpRow, col+dc);
+            }
+        }
+    }
+
+    private void fillRangeHI(int row, int col)
+    {
+        int player = whose(row, col);
+        for (int dr = -1; dr < 2; dr += 2)
+        {
+            for (int tmpRow = row+dr; true; tmpRow += dr)
+            {
+                if (addRange(player, tmpRow, col))
+                {
+                    break;
+                }
+            }
+        }
+        for (int dc = -1; dc < 2; dc += 2)
+        {
+            for (int tmpCol = col+dc; true; tmpCol += dc)
+            {
+                if (addRange(player, row, tmpCol))
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    private void fillRangeKAKU(int row, int col)
+    {
+        int player = whose(row, col);
+        for (int dr = -1; dr < 2; dr += 2)
+        {
+            for (int dc = -1; dc < 2; dc += 2)
+            {
+                int tmpRow = row + dr;
+                int tmpCol = col + dc;
+                for (;;)
+                {
+                    if (addRange(player, tmpRow, tmpCol))
+                    {
+                        break;
+                    }
+                    tmpRow += dr;
+                    tmpCol += dc;
+                }
+            }
+        }
+    }
+
+    private void fillRangeKIN(int row, int col)
+    {
+        int player = whose(row, col);
+        int omitDr = isOpponent(row, col) ? -1 : 1;
+        for (int dr = -1; dr < 2; dr++)
+        {
+            int tmpRow = row + dr;
+            for (int dc = -1; dc < 2; dc++)
+            {
+                if (dc == 0 && dr == 0)
+                {
+                    continue;
+                }
+                if (dc != 0 && dr == omitDr)
+                {
+                    continue;
+                }
+                addRange(player, tmpRow, col+dc);
+            }
+        }
+    }
+
+    private void fillRangeGIN(int row, int col)
+    {
+        fillRangeFU(row, col);
+        int player = whose(row, col);
+        for (int dr = -1; dr < 2; dr += 2)
+        {
+            for (int dc = -1; dc < 2; dc += 2)
+            {
+               addRange(player, row+dr, col+dc);
+            }
+        }
+    }
+
+    private void fillRangeKEI(int row, int col)
+    {
+        int player = whose(row, col);
+        int tmpRow = isOpponent(row, col) ? (row+2) : (row-2);
+        addRange(player, tmpRow, col-1);
+        addRange(player, tmpRow, col+1);
+    }
+
+    private void fillRangeKYO(int row, int col)
+    {
+        int player = whose(row, col);
+        int dr = isOpponent(row, col) ? 1 : -1;
+        int tmpRow = row + dr;
+        while (!addRange(player, tmpRow, col))
+        {
+            tmpRow += dr;
+        }
+    }
+
+    private void fillRangeFU(int row, int col)
+    {
+        int dr = isOpponent(row, col) ? 1 : -1;
+        addRange(whose(row, col), row + dr, col);
     }
 }
