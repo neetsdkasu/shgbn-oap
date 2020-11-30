@@ -1,14 +1,9 @@
 import java.io.*;
-import java.util.Random;
 import javax.microedition.lcdui.*;
 import javax.microedition.lcdui.game.*;
 
 class ShogiBan extends GameCanvas
 {
-    private static final boolean WTK =
-        String.valueOf(System.getProperty("microedition.platform"))
-            .startsWith("Sun");
-
     private static final int
         BACKGROUND_COLOR = 0xFFB000,
         CURSOR_COLOR = 0x00FFFF,
@@ -27,7 +22,11 @@ class ShogiBan extends GameCanvas
         NUMBER_V_OFFSET_X = BAN_OFFSET_X + 9*CELL_SIZE + SPACE;
 
     private final Font
-        SMALL_FONT = Font.getFont(0, 0, WTK ? Font.SIZE_MEDIUM : Font.SIZE_SMALL);
+        SMALL_FONT = Font.getFont(
+            0,
+            0,
+            ShogiBanMIDlet.WTK ? Font.SIZE_MEDIUM : Font.SIZE_SMALL
+        );
 
     private int curX, curY, selX, selY, menuCur;
 
@@ -44,6 +43,8 @@ class ShogiBan extends GameCanvas
     private Game game;
     private Problem problem;
     private Board board;
+
+    private Menu menu = null;
 
     ShogiBan()
     {
@@ -114,11 +115,9 @@ class ShogiBan extends GameCanvas
 
         renderCursor(g);
 
-        switch (menuMode)
+        if (menuMode != 0)
         {
-        case 1:
-            renderRankUpMenu(g);
-            break;
+            menu.paint(g);
         }
 
         flushGraphics();
@@ -306,29 +305,65 @@ class ShogiBan extends GameCanvas
         // push stack submenu?
         menuMode = menuId;
         menuCur = 0;
+        switch (menuId)
+        {
+        case 1:
+            menu = new Menu(new String[]{resWords[6], resWords[7]});
+            break;
+        }
     }
 
     private void closeMenu()
     {
         // pop stack submenu?
+        menuMode = 0;
+        menu = null;
     }
 
     protected void keyPressed(int keyCode)
     {
+        int action = getGameAction(keyCode);
+        if (menuMode != 0)
+        {
+            if (menu.keyPressed(keyCode, action))
+            {
+                render();
+                return;
+            }
+        }
         switch (menuMode)
         {
         case 0:
             if (isGameMode())
             {
-                movePlayModeCursor(keyCode);
+                movePlayModeCursor(keyCode, action);
             }
+            break;
+        case 1:
+            actMenuRankUp(keyCode, action);
             break;
         }
     }
 
-    private void movePlayModeCursor(int keyCode)
+    private void actMenuRankUp(int keyCode, int action)
     {
-        switch (getGameAction(keyCode))
+        if (action != Canvas.FIRE)
+        {
+            return;
+        }
+        if (game.move(selY, selX, curY, curX, menu.getSelect() == 0))
+        {
+            state = 0;
+            colorField.fillCells(0, 0, 9, 9, 0);
+            closeMenu();
+            render();
+        }
+    }
+
+
+    private void movePlayModeCursor(int keyCode, int action)
+    {
+        switch (action)
         {
         case Canvas.UP:
             curY = (curY + 10) % 11;
@@ -441,9 +476,9 @@ class ShogiBan extends GameCanvas
                 {
                     if (!game.needRankUp(selY, selX, curY))
                     {
-                        // state = 2;
-                        // openMenu(1);
-                        // return true;
+                        state = 2;
+                        openMenu(1);
+                        return true;
                     }
                 }
                 if (game.move(selY, selX, curY, curX))

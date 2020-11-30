@@ -367,13 +367,19 @@ class Game extends Board
 
     boolean canRankUp(int row, int col, int toRow)
     {
+        int k = kind(row, col);
+        if (k == KIN || k >= GYOKU)
+        {
+            return false;
+        }
         if (isOpponent(row, col))
         {
-            return isRankUpRow(1, toRow);
+            return isRankUpRow(1, row) || isRankUpRow(1, toRow);
         }
         else
         {
-            return isMine(row, col) ? isRankUpRow(0, toRow) : false;
+            return isMine(row, col)
+                && (isRankUpRow(0, row) || isRankUpRow(0, toRow));
         }
     }
 

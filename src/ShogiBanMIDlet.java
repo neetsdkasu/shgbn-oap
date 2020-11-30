@@ -7,6 +7,10 @@ import javax.microedition.midlet.MIDletStateChangeException;
 
 public class ShogiBanMIDlet extends MIDlet implements CommandListener
 {
+    static final boolean WTK =
+        String.valueOf(System.getProperty("microedition.platform"))
+            .startsWith("Sun");
+
     private final ShogiBan shogiBan;
 
     private final Command exitCommand, menuCommand;
