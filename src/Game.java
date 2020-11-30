@@ -1,53 +1,204 @@
-import java.io.*;
-import java.util.*;
 
-class Game extends Board
+final class Game implements Board
 {
+    private static Game instance = null;
 
-    static Game newNormalGame(boolean opponentFirst)
+    static Game getInstance()
     {
-        Game game = new Game(Problem.getNormalGame());
-
-        if (opponentFirst)
+        if (instance == null)
         {
-            game.firstPlayer = 1;
+            instance = new Game();
         }
 
-        return game;
+        return instance;
     }
 
-    int currentStep;
-    int firstPlayer, currentPlayer;
+    private Game() {}
 
-    final Problem problem;
-    final int[][] currentField, currentHands;
-    final boolean[][] movable;
-    final int[][][] range;
-    final int[][] guardian;
-    final boolean[][][] dangerZone;
-    final boolean[] danger, checkmate;
-
-    Game(Problem p)
+    public int hands(int player, int kind)
     {
-        currentField = new int[9][9];
-        currentHands = new int[2][8];
-        movable = new boolean[9][9];
-        range = new int[2][9][9];
-        guardian = new int[9][9];
-        dangerZone = new boolean[2][9][9];
-        danger = new boolean[2];
-        checkmate = new boolean[2];
-        problem = p;
+        return currentHands[player][kind];
     }
 
-    void init()
+    public int field(int row, int col)
+    {
+        return currentField[row][col];
+    }
+
+    static void copyToProblem()
+    {
+        System.arraycopy(currentHands[0], 0, Problem.initialHands[0], 0, 8);
+        System.arraycopy(currentHands[1], 0, Problem.initialHands[1], 0, 8);
+        for (int i = 0; i < 9; i++)
+        {
+            System.arraycopy(currentField[i], 0, Problem.initialField[i], 0, 9);
+        }
+    }
+
+    private static int
+        currentStep = 0,
+        firstPlayer = 0,
+        currentPlayer = 0;
+
+    private static final int[][][]
+        range = new int[2][9][9];
+
+    private static final int[][]
+        currentField = new int[9][9],
+        currentHands = new int[2][8],
+        guardian = new int[9][9];
+
+    private static final boolean[][][]
+        dangerZone = new boolean[2][9][9];
+
+    private static final boolean[][]
+        movable = new boolean[9][9];
+
+    private static final boolean[]
+        danger = new boolean[2],
+        checkmate = new boolean[2];
+
+    static int getFirstPlayer()
+    {
+        return firstPlayer;
+    }
+
+    static int getCurrentPlayer()
+    {
+        return currentPlayer;
+    }
+
+    static int getCurrentStep()
+    {
+        return currentStep;
+    }
+
+    static boolean isDanger()
+    {
+        return danger[currentPlayer];
+    }
+
+    static boolean isCheckmate()
+    {
+        return checkmate[currentPlayer];
+    }
+
+    static boolean isEmpty(int row, int col)
+    {
+        return currentField[row][col] == 0;
+    }
+
+    static boolean isOpponent(int row, int col)
+    {
+        return currentField[row][col] > OPPONENT;
+    }
+
+    static boolean isMine(int row, int col)
+    {
+        return 0 < currentField[row][col] && !isOpponent(row, col);
+    }
+
+    static boolean inField(int row, int col)
+    {
+        return 0 <= row && row < 9 && 0 <= col && col < 9;
+    }
+
+    static boolean has(int player, int row, int col)
+    {
+        return player == whose(row, col);
+    }
+
+    static int whose(int row, int col)
+    {
+        return isOpponent(row, col)
+            ? 1
+            : Math.min(0, currentField[row][col] - 1);
+    }
+
+    static int kind(int row, int col)
+    {
+        return isOpponent(row, col)
+            ? currentField[row][col] - OPPONENT
+            : currentField[row][col];
+    }
+
+    static int getRange(int player, int row, int col)
+    {
+        return inField(row, col) ? range[player][row][col] : 0;
+    }
+
+    static boolean isCurrentPlayer(int row, int col)
+    {
+        return has(currentPlayer, row, col);
+    }
+
+    static boolean isRankUpRow(int row)
+    {
+        return isRankUpRow(currentPlayer, row);
+    }
+
+    static boolean isRankUpRow(int player, int row)
+    {
+        return player == 0 ? (row <= 2) : (row >= 6);
+    }
+
+    static boolean needRankUp(int row, int col, int toRow)
+    {
+        switch (kind(row, col))
+        {
+        case FU:
+        case KYO:
+            return isOpponent(row, col) ? (toRow == 8) : (toRow == 0);
+        case KEI:
+            return isOpponent(row, col) ? (toRow >= 7) : (toRow <= 1);
+        default:
+            return false;
+        }
+    }
+
+    static boolean canRankUp(int row, int col, int toRow)
+    {
+        int k = kind(row, col);
+        if (k == KIN || k >= GYOKU)
+        {
+            return false;
+        }
+        if (isOpponent(row, col))
+        {
+            return isRankUpRow(1, row) || isRankUpRow(1, toRow);
+        }
+        else
+        {
+            return isMine(row, col)
+                && (isRankUpRow(0, row) || isRankUpRow(0, toRow));
+        }
+    }
+
+    static boolean canMoveTo(int row, int col)
+    {
+        if (!inField(row, col))
+        {
+            return false;
+        }
+        int k = kind(row, col);
+        if (k == GYOKU || k == OU)
+        {
+            if (!isCurrentPlayer(row, col))
+            {
+                return false;
+            }
+        }
+        return movable[row][col];
+    }
+
+    static void init()
     {
         currentStep = 0;
         currentPlayer = firstPlayer;
         for (int i = 0; i < 9; i++)
         {
             System.arraycopy(
-                problem.initialField[i],
+                Problem.initialField[i],
                 0,
                 currentField[i],
                 0,
@@ -57,7 +208,7 @@ class Game extends Board
         for (int i = 0; i < 2; i++)
         {
             System.arraycopy(
-                problem.initialHands[i],
+                Problem.initialHands[i],
                 0,
                 currentHands[i],
                 0,
@@ -69,12 +220,244 @@ class Game extends Board
         checkOute();
     }
 
-    boolean isDanger()
+
+    static boolean put(int kind, int row, int col)
     {
-        return danger[currentPlayer];
+        if (!selectHand(currentPlayer, kind))
+        {
+            return false;
+        }
+
+        if (!canMoveTo(row, col))
+        {
+            return false;
+        }
+
+        currentHands[currentPlayer][kind]--;
+        currentField[row][col] = (kind + 1) + OPPONENT*currentPlayer;
+
+        switchNextPlayer();
+
+        return true;
     }
 
-    private void clearOute()
+    static boolean selectHand(int player, int kind)
+    {
+        if (currentHands[player][kind] == 0)
+        {
+            return false;
+        }
+
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                movable[row][col] = isEmpty(row, col);
+            }
+        }
+
+        switch (kind+1)
+        {
+        case FU:
+            omit2FU(player);
+            omitUchiFU(player);
+        case KYO:
+            for (int col = 0; col < 9; col++)
+            {
+                movable[8*player][col] = false;
+            }
+            break;
+        case KEI:
+            for (int col = 0; col < 9; col++)
+            {
+                movable[8*player][col] = false;
+                movable[6*player+1][col] = false;
+            }
+            break;
+        default:
+            break;
+        }
+
+        if (danger[player])
+        {
+            filterDanger(player);
+        }
+
+        return true;
+    }
+
+    static boolean move(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        return move(fromRow, fromCol, toRow, toCol, false);
+    }
+
+    static boolean move(int fromRow, int fromCol, int toRow, int toCol, boolean rankUp)
+    {
+        if (currentPlayer == 0)
+        {
+            if (!isMine(fromRow, fromCol))
+            {
+                return false;
+            }
+        }
+        else if (!isOpponent(fromRow, fromCol))
+        {
+            return false;
+        }
+
+        if (!select(fromRow, fromCol))
+        {
+            return false;
+        }
+
+        if (!canMoveTo(toRow, toCol))
+        {
+            return false;
+        }
+
+        if (rankUp)
+        {
+            int k = kind(fromRow, fromCol);
+            if (k == KIN || k >= GYOKU)
+            {
+                rankUp = false;
+            }
+            else
+            {
+                rankUp = isRankUpRow(fromRow) || isRankUpRow(toRow);
+            }
+        }
+        else
+        {
+            rankUp = needRankUp(fromRow, fromCol, toRow);
+        }
+
+        if (!isEmpty(toRow, toCol))
+        {
+            currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]++;
+        }
+        currentField[toRow][toCol] = currentField[fromRow][fromCol]
+                                   + (rankUp ? 8 : 0);
+        currentField[fromRow][fromCol] = 0;
+
+        switchNextPlayer();
+
+        return true;
+    }
+
+    static boolean select(int row, int col)
+    {
+        if (isEmpty(row, col))
+        {
+            return false;
+        }
+
+        clearMovable();
+
+        switch (kind(row, col))
+        {
+        case FU:
+            fillMovableFU(row, col);
+            break;
+        case KYO:
+            fillMovableKYO(row, col);
+            break;
+        case KEI:
+            fillMovableKEI(row, col);
+            break;
+        case GIN:
+            fillMovableGIN(row, col);
+            break;
+        case KIN:
+            fillMovableKIN(row, col);
+            break;
+        case KAKU:
+            fillMovableKAKU(row, col);
+            break;
+        case HI:
+            fillMovableHI(row, col);
+            break;
+        case GYOKU:
+            fillMovableGYOKU(row, col);
+            return true;
+        case TO:
+        case NKYO:
+        case NKEI:
+        case NGIN:
+            fillMovableKIN(row, col);
+            break;
+        case UMA:
+            fillMovableUMA(row, col);
+            break;
+        case RYU:
+            fillMovableRYU(row, col);
+            break;
+        case OU:
+            fillMovableGYOKU(row, col);
+            return true;
+        }
+
+        int player = whose(row, col);
+        if (danger[player])
+        {
+            filterDanger(player);
+        }
+
+        return true;
+    }
+
+    private static boolean canGoTo(int row, int col, int dr, int dc)
+    {
+        return inField(row+dr, col+dc)
+            && (guardian[row][col] & (1 << (4+3*dr+dc))) == 0;
+    }
+
+    private static void switchNextPlayer()
+    {
+        currentStep++;
+        currentPlayer ^= 1;
+        clearOute();
+        calcRange();
+        checkOute();
+    }
+
+    private static boolean addRange(int player, int row, int col)
+    {
+        if (!inField(row, col))
+        {
+            return true;
+        }
+        range[player][row][col]++;
+        return !isEmpty(row, col);
+    }
+
+    private static void clearMovable()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            for (int k = 0; k < 9; k++)
+            {
+                movable[i][k] = false;
+            }
+        }
+    }
+
+    private static boolean hasAnyMovable()
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                if (movable[row][col])
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static void clearOute()
     {
         for (int i = 0; i < 2; i++)
         {
@@ -92,7 +475,33 @@ class Game extends Board
         }
     }
 
-    private void checkOute()
+    private static void filterDanger(int player)
+    {
+        boolean[][] zone = dangerZone[player];
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                movable[row][col] &= zone[row][col];
+            }
+        }
+    }
+
+    private static boolean setMovable(int row, int col, boolean opponent)
+    {
+        if (!inField(row, col))
+        {
+            return true;
+        }
+
+        movable[row][col] = opponent
+            ? !isOpponent(row, col)
+            : !isMine(row, col);
+
+        return !isEmpty(row, col);
+    }
+
+    private static void checkOute()
     {
         for (int row = 0; row < 9; row++)
         {
@@ -125,12 +534,7 @@ class Game extends Board
         }
     }
 
-    boolean isCheckmate()
-    {
-        return checkmate[currentPlayer];
-    }
-
-    private boolean calcCheckmate(int player)
+    private static boolean calcCheckmate(int player)
     {
         for (int row = 0; row < 9; row++)
         {
@@ -160,22 +564,7 @@ class Game extends Board
         return true;
     }
 
-    private boolean hasAnyMovable()
-    {
-        for (int row = 0; row < 9; row++)
-        {
-            for (int col = 0; col < 9; col++)
-            {
-                if (movable[row][col])
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private void checkOuteAround(int player, int row, int col)
+    private static void checkOuteAround(int player, int row, int col)
     {
         for (int dr = -2; dr <= 2; dr++)
         {
@@ -200,7 +589,7 @@ class Game extends Board
         }
     }
 
-    private void checkOutePathHI(int row, int col)
+    private static void checkOutePathHI(int row, int col)
     {
         int player = whose(row, col);
         for (int d = 0; d < 4; d++)
@@ -276,7 +665,7 @@ class Game extends Board
         }
     }
 
-    private void checkOutePathKAKU(int row, int col)
+    private static void checkOutePathKAKU(int row, int col)
     {
         int player = whose(row, col);
         for (int dr = -1; dr < 2; dr += 2)
@@ -342,7 +731,7 @@ class Game extends Board
         }
     }
 
-    private void calcRange()
+    private static void calcRange()
     {
         for (int i = 0; i < 2; i++)
         {
@@ -407,145 +796,7 @@ class Game extends Board
         }
     }
 
-    public String getTitle()
-    {
-        return problem.getTitle();
-    }
-
-    public int getStepLimit()
-    {
-        return problem.getStepLimit();
-    }
-
-    public int hands(int player, int kind)
-    {
-        return currentHands[player][kind];
-    }
-
-    public int field(int row, int col)
-    {
-        return currentField[row][col];
-    }
-
-    void clearMovable()
-    {
-        for (int i = 0; i < 9; i++)
-        {
-            for (int k = 0; k < 9; k++)
-            {
-                movable[i][k] = false;
-            }
-        }
-    }
-
-    boolean needRankUp(int row, int col, int toRow)
-    {
-        switch (kind(row, col))
-        {
-        case FU:
-        case KYO:
-            return isOpponent(row, col) ? (toRow == 8) : (toRow == 0);
-        case KEI:
-            return isOpponent(row, col) ? (toRow >= 7) : (toRow <= 1);
-        default:
-            return false;
-        }
-    }
-
-    boolean canRankUp(int row, int col, int toRow)
-    {
-        int k = kind(row, col);
-        if (k == KIN || k >= GYOKU)
-        {
-            return false;
-        }
-        if (isOpponent(row, col))
-        {
-            return isRankUpRow(1, row) || isRankUpRow(1, toRow);
-        }
-        else
-        {
-            return isMine(row, col)
-                && (isRankUpRow(0, row) || isRankUpRow(0, toRow));
-        }
-    }
-
-    boolean isRankUpRow(int row)
-    {
-        return isRankUpRow(currentPlayer, row);
-    }
-
-    boolean isRankUpRow(int player, int row)
-    {
-        return player == 0 ? (row <= 2) : (row >= 6);
-    }
-
-    boolean put(int kind, int row, int col)
-    {
-        if (!selectHand(currentPlayer, kind))
-        {
-            return false;
-        }
-
-        if (!canMoveTo(row, col))
-        {
-            return false;
-        }
-
-        currentHands[currentPlayer][kind]--;
-        currentField[row][col] = (kind + 1) + OPPONENT*currentPlayer;
-
-        switchNextPlayer();
-
-        return true;
-    }
-
-    boolean selectHand(int player, int kind)
-    {
-        if (hands(player, kind) == 0)
-        {
-            return false;
-        }
-
-        for (int row = 0; row < 9; row++)
-        {
-            for (int col = 0; col < 9; col++)
-            {
-                movable[row][col] = isEmpty(row, col);
-            }
-        }
-
-        switch (kind+1)
-        {
-        case FU:
-            omit2FU(player);
-            omitUchiFU(player);
-        case KYO:
-            for (int col = 0; col < 9; col++)
-            {
-                movable[8*player][col] = false;
-            }
-            break;
-        case KEI:
-            for (int col = 0; col < 9; col++)
-            {
-                movable[8*player][col] = false;
-                movable[6*player+1][col] = false;
-            }
-            break;
-        default:
-            break;
-        }
-
-        if (danger[player])
-        {
-            filterDanger(player);
-        }
-
-        return true;
-    }
-
-    private void omitUchiFU(int player)
+    private static void omitUchiFU(int player)
     {
         for (int row = 0; row < 9; row++)
         {
@@ -602,7 +853,7 @@ class Game extends Board
         }
     }
 
-    private void omit2FU(int player)
+    private static void omit2FU(int player)
     {
         for (int col = 0; col < 9; col++)
         {
@@ -626,209 +877,19 @@ class Game extends Board
         }
     }
 
-    boolean move(int fromRow, int fromCol, int toRow, int toCol)
-    {
-        return move(fromRow, fromCol, toRow, toCol, false);
-    }
-
-    boolean move(int fromRow, int fromCol, int toRow, int toCol, boolean rankUp)
-    {
-        if (currentPlayer == 0)
-        {
-            if (!isMine(fromRow, fromCol))
-            {
-                return false;
-            }
-        }
-        else if (!isOpponent(fromRow, fromCol))
-        {
-            return false;
-        }
-
-        if (!select(fromRow, fromCol))
-        {
-            return false;
-        }
-
-        if (!canMoveTo(toRow, toCol))
-        {
-            return false;
-        }
-
-        if (rankUp)
-        {
-            int k = kind(fromRow, fromCol);
-            if (k == KIN || k >= GYOKU)
-            {
-                rankUp = false;
-            }
-            else
-            {
-                rankUp = isRankUpRow(fromRow) || isRankUpRow(toRow);
-            }
-        }
-        else
-        {
-            rankUp = needRankUp(fromRow, fromCol, toRow);
-        }
-
-        if (!isEmpty(toRow, toCol))
-        {
-            currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]++;
-        }
-        currentField[toRow][toCol] = currentField[fromRow][fromCol]
-                                   + (rankUp ? 8 : 0);
-        currentField[fromRow][fromCol] = 0;
-
-        switchNextPlayer();
-
-        return true;
-    }
-
-    private void switchNextPlayer()
-    {
-        currentStep++;
-        currentPlayer ^= 1;
-        clearOute();
-        calcRange();
-        checkOute();
-    }
-
-    boolean select(int row, int col)
-    {
-        if (isEmpty(row, col))
-        {
-            return false;
-        }
-
-        clearMovable();
-
-        switch (kind(row, col))
-        {
-        case FU:
-            fillMovableFU(row, col);
-            break;
-        case KYO:
-            fillMovableKYO(row, col);
-            break;
-        case KEI:
-            fillMovableKEI(row, col);
-            break;
-        case GIN:
-            fillMovableGIN(row, col);
-            break;
-        case KIN:
-            fillMovableKIN(row, col);
-            break;
-        case KAKU:
-            fillMovableKAKU(row, col);
-            break;
-        case HI:
-            fillMovableHI(row, col);
-            break;
-        case GYOKU:
-            fillMovableGYOKU(row, col);
-            return true;
-        case TO:
-        case NKYO:
-        case NKEI:
-        case NGIN:
-            fillMovableKIN(row, col);
-            break;
-        case UMA:
-            fillMovableUMA(row, col);
-            break;
-        case RYU:
-            fillMovableRYU(row, col);
-            break;
-        case OU:
-            fillMovableGYOKU(row, col);
-            return true;
-        }
-
-        int player = whose(row, col);
-        if (danger[player])
-        {
-            filterDanger(player);
-        }
-
-        return true;
-    }
-
-    private void filterDanger(int player)
-    {
-        boolean[][] zone = dangerZone[player];
-        for (int row = 0; row < 9; row++)
-        {
-            for (int col = 0; col < 9; col++)
-            {
-                movable[row][col] &= zone[row][col];
-            }
-        }
-    }
-
-    int getRange(int player, int row, int col)
-    {
-        return inField(row, col)
-            ? range[player][row][col]
-            : 0;
-    }
-
-    boolean isCurrentPlayer(int row, int col)
-    {
-        return has(currentPlayer, row, col);
-    }
-
-    boolean canMoveTo(int row, int col)
-    {
-        if (!inField(row, col))
-        {
-            return false;
-        }
-        int k = kind(row, col);
-        if (k == GYOKU || k == OU)
-        {
-            if (!isCurrentPlayer(row, col))
-            {
-                return false;
-            }
-        }
-        return movable[row][col];
-    }
-
-    boolean canGoTo(int row, int col, int dr, int dc)
-    {
-        return inField(row+dr, col+dc)
-            && (guardian[row][col] & (1 << (4+3*dr+dc))) == 0;
-    }
-
-    private boolean setMovable(int row, int col, boolean opponent)
-    {
-        if (!inField(row, col))
-        {
-            return true;
-        }
-
-        movable[row][col] = opponent
-            ? !isOpponent(row, col)
-            : !isMine(row, col);
-
-        return !isEmpty(row, col);
-    }
-
-    private void fillMovableRYU(int row, int col)
+    private static void fillMovableRYU(int row, int col)
     {
         fillMovableGIN(row, col);
         fillMovableHI(row, col);
     }
 
-    private void fillMovableUMA(int row, int col)
+    private static void fillMovableUMA(int row, int col)
     {
         fillMovableKIN(row, col);
         fillMovableKAKU(row, col);
     }
 
-    private void fillMovableGYOKU(int row, int col)
+    private static void fillMovableGYOKU(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
         for (int dr = -1; dr < 2; dr++)
@@ -853,7 +914,7 @@ class Game extends Board
         }
     }
 
-    private void fillMovableHI(int row, int col)
+    private static void fillMovableHI(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
         for (int dr = -1; dr < 2; dr += 2)
@@ -886,7 +947,7 @@ class Game extends Board
         }
     }
 
-    private void fillMovableKAKU(int row, int col)
+    private static void fillMovableKAKU(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
         for (int dr = -1; dr < 2; dr += 2)
@@ -912,7 +973,7 @@ class Game extends Board
         }
     }
 
-    private void fillMovableKIN(int row, int col)
+    private static void fillMovableKIN(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
         int omitDr = opponent ? -1 : 1;
@@ -938,7 +999,7 @@ class Game extends Board
         }
     }
 
-    private void fillMovableGIN(int row, int col)
+    private static void fillMovableGIN(int row, int col)
     {
         fillMovableFU(row, col);
         boolean opponent = isOpponent(row, col);
@@ -954,7 +1015,7 @@ class Game extends Board
         }
     }
 
-    private void fillMovableKEI(int row, int col)
+    private static void fillMovableKEI(int row, int col)
     {
         if (guardian[row][col] != 0)
         {
@@ -966,7 +1027,7 @@ class Game extends Board
         setMovable(tmpRow, col+1, opponent);
     }
 
-    private void fillMovableKYO(int row, int col)
+    private static void fillMovableKYO(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
         int dr = opponent ? 1 : -1;
@@ -981,7 +1042,7 @@ class Game extends Board
         }
     }
 
-    private void fillMovableFU(int row, int col)
+    private static void fillMovableFU(int row, int col)
     {
         boolean opponent = isOpponent(row, col);
         int dr = opponent ? 1 : -1;
@@ -991,29 +1052,19 @@ class Game extends Board
         }
     }
 
-    private boolean addRange(int player, int row, int col)
-    {
-        if (!inField(row, col))
-        {
-            return true;
-        }
-        range[player][row][col]++;
-        return !isEmpty(row, col);
-    }
-
-    private void fillRangeRYU(int row, int col)
+    private static void fillRangeRYU(int row, int col)
     {
         fillRangeGIN(row, col);
         fillRangeHI(row, col);
     }
 
-    private void fillRangeUMA(int row, int col)
+    private static void fillRangeUMA(int row, int col)
     {
         fillRangeKIN(row, col);
         fillRangeKAKU(row, col);
     }
 
-    private void fillRangeGYOKU(int row, int col)
+    private static void fillRangeGYOKU(int row, int col)
     {
         int player = whose(row, col);
         for (int dr = -1; dr < 2; dr++)
@@ -1030,7 +1081,7 @@ class Game extends Board
         }
     }
 
-    private void fillRangeHI(int row, int col)
+    private static void fillRangeHI(int row, int col)
     {
         int player = whose(row, col);
         for (int dr = -1; dr < 2; dr += 2)
@@ -1055,7 +1106,7 @@ class Game extends Board
         }
     }
 
-    private void fillRangeKAKU(int row, int col)
+    private static void fillRangeKAKU(int row, int col)
     {
         int player = whose(row, col);
         for (int dr = -1; dr < 2; dr += 2)
@@ -1077,7 +1128,7 @@ class Game extends Board
         }
     }
 
-    private void fillRangeKIN(int row, int col)
+    private static void fillRangeKIN(int row, int col)
     {
         int player = whose(row, col);
         int omitDr = isOpponent(row, col) ? -1 : 1;
@@ -1099,7 +1150,7 @@ class Game extends Board
         }
     }
 
-    private void fillRangeGIN(int row, int col)
+    private static void fillRangeGIN(int row, int col)
     {
         fillRangeFU(row, col);
         int player = whose(row, col);
@@ -1112,7 +1163,7 @@ class Game extends Board
         }
     }
 
-    private void fillRangeKEI(int row, int col)
+    private static void fillRangeKEI(int row, int col)
     {
         int player = whose(row, col);
         int tmpRow = isOpponent(row, col) ? (row+2) : (row-2);
@@ -1120,7 +1171,7 @@ class Game extends Board
         addRange(player, tmpRow, col+1);
     }
 
-    private void fillRangeKYO(int row, int col)
+    private static void fillRangeKYO(int row, int col)
     {
         int player = whose(row, col);
         int dr = isOpponent(row, col) ? 1 : -1;
@@ -1131,7 +1182,7 @@ class Game extends Board
         }
     }
 
-    private void fillRangeFU(int row, int col)
+    private static void fillRangeFU(int row, int col)
     {
         int dr = isOpponent(row, col) ? 1 : -1;
         addRange(whose(row, col), row + dr, col);

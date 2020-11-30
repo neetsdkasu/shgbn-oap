@@ -1,106 +1,19 @@
 
-class Problem extends Board
+final class Problem implements Board
 {
-    private static Problem NORMAL_GAME = null;
+    private static Problem instance = null;
 
-    static Problem getNormalGame()
+    static Problem getInstance()
     {
-        if (NORMAL_GAME == null)
+        if (instance == null)
         {
-            NORMAL_GAME = makeNormalGame();
+            instance = new Problem();
         }
 
-        return NORMAL_GAME;
+        return instance;
     }
 
-    static Problem makeNormalGame()
-    {
-        Problem p = new Problem();
-
-        for (int i = 0; i < 4; i++)
-        {
-            p.initialField[0][i] = KYO + i + OPPONENT;
-            p.initialField[0][8-i] = KYO + i + OPPONENT;
-            p.initialField[8][i] = KYO + i;
-            p.initialField[8][8-i] = KYO + i;
-        }
-
-        p.initialField[0][4] = OU + OPPONENT;
-        p.initialField[1][1] = HI + OPPONENT;
-        p.initialField[1][7] = KAKU + OPPONENT;
-        p.initialField[8][4] = GYOKU;
-        p.initialField[7][7] = HI;
-        p.initialField[7][1] = KAKU;
-
-        for (int i = 0; i < 9; i++)
-        {
-            p.initialField[2][i] = FU + OPPONENT;
-            p.initialField[6][i] = FU;
-        }
-
-        return p;
-    }
-
-    static Problem makeFromGame(Game game)
-    {
-        Problem p = new Problem();
-        p.stepLimit = game.getStepLimit();
-        p.title = game.getTitle();
-        for (int i = 0; i < 9; i++)
-        {
-            System.arraycopy(
-                game.currentField[i],
-                0,
-                p.initialField[i],
-                0,
-                p.initialField[i].length
-            );
-        }
-        for (int i = 0; i < 2; i++)
-        {
-            System.arraycopy(
-                game.currentHands[i],
-                0,
-                p.initialHands[i],
-                0,
-                p.initialHands[i].length
-            );
-        }
-        return p;
-    }
-
-    static Problem make()
-    {
-        Problem p = new Problem();
-
-        p.initialHands[1][FU-1] = 18;
-        p.initialHands[1][KYO-1] = 4;
-        p.initialHands[1][KEI-1] = 4;
-        p.initialHands[1][GIN-1] = 4;
-        p.initialHands[1][KIN-1] = 4;
-        p.initialHands[1][HI-1] = 2;
-        p.initialHands[1][KAKU-1] = 2;
-
-        p.initialField[1][6] = OU + OPPONENT;
-
-        return p;
-    }
-
-    int stepLimit;
-    String title = "";
-
-    final int[][] initialField, initialHands;
-
-    Problem()
-    {
-        initialField = new int[9][9];
-        initialHands = new int[2][8];
-    }
-
-    public String getTitle()
-    {
-        return title;
-    }
+    private Problem() {}
 
     public int field(int row, int col)
     {
@@ -112,8 +25,79 @@ class Problem extends Board
         return initialHands[player][kind];
     }
 
-    public int getStepLimit()
+    private static final int[] zero = new int[9];
+
+    private static int stepLimit = 0;
+    private static String title = "";
+
+    static final int[][]
+        initialField = new int[9][9],
+        initialHands = new int[2][8];
+
+    static String getTitle()
+    {
+        return title;
+    }
+
+    static int getStepLimit()
     {
         return stepLimit;
+    }
+
+    static void clear()
+    {
+        System.arraycopy(zero, 0, initialHands[0], 0, 8);
+        System.arraycopy(zero, 0, initialHands[1], 0, 8);
+        for (int i = 0; i < 9; i++)
+        {
+            System.arraycopy(zero, 0, initialField[i], 0, 9);
+        }
+    }
+
+    static void setNormalGame()
+    {
+        clear();
+
+        stepLimit = 0;
+        title = "";
+
+        for (int i = 0; i < 4; i++)
+        {
+            initialField[0][i] = KYO + i + OPPONENT;
+            initialField[0][8-i] = KYO + i + OPPONENT;
+            initialField[8][i] = KYO + i;
+            initialField[8][8-i] = KYO + i;
+        }
+
+        initialField[0][4] = OU + OPPONENT;
+        initialField[1][1] = HI + OPPONENT;
+        initialField[1][7] = KAKU + OPPONENT;
+        initialField[8][4] = GYOKU;
+        initialField[7][7] = HI;
+        initialField[7][1] = KAKU;
+
+        for (int i = 0; i < 9; i++)
+        {
+            initialField[2][i] = FU + OPPONENT;
+            initialField[6][i] = FU;
+        }
+    }
+
+    static void make()
+    {
+        clear();
+
+        stepLimit = 0;
+        title = "";
+
+        initialHands[1][FU-1] = 18;
+        initialHands[1][KYO-1] = 4;
+        initialHands[1][KEI-1] = 4;
+        initialHands[1][GIN-1] = 4;
+        initialHands[1][KIN-1] = 4;
+        initialHands[1][HI-1] = 2;
+        initialHands[1][KAKU-1] = 2;
+
+        initialField[1][6] = OU + OPPONENT;
     }
 }

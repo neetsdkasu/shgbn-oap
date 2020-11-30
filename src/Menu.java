@@ -1,27 +1,33 @@
 import javax.microedition.lcdui.*;
 
-class Menu
+final class Menu implements GConstants
 {
-    private final Font
-        SMALL_FONT = Font.getFont(
-            0,
-            0,
-            ShogiBanMIDlet.WTK ? Font.SIZE_MEDIUM : Font.SIZE_SMALL
-        );
-
+    private static Menu rankUpMenu = null;
+    
+    static Menu getRankUpMenu()
+    {
+        if (rankUpMenu == null)
+        {
+            rankUpMenu = new Menu(1, new String[]{WORDS[6], WORDS[7]});
+        }
+        
+        return rankUpMenu;
+    }
+    
     private static final int
-        DISP_W = 240,
-        DISP_H = 268;
+        BACKGROUND_COLOR = 0xE0E0E0;
 
     boolean[] enable;
     String[] text;
     int[] textWidth;
+    int id;
     int sel = 0;
     int width = 0, height = 0, offsetX, offsetY;
     int viewCount, viewTop = 0;
 
-    Menu(String[] t)
+    Menu(int num, String[] t)
     {
+        id = num;
         text = t;
         enable = new boolean[t.length];
         textWidth = new int[t.length];
@@ -41,6 +47,12 @@ class Menu
     int getSelect()
     {
         return sel;
+    }
+    
+    Menu cleanUp()
+    {
+        sel = 0;
+        return this;
     }
 
     boolean keyPressed(int keyCode, int action)
@@ -71,25 +83,25 @@ class Menu
     {
         g.setFont(SMALL_FONT);
 
-        g.setColor(0x7F7F7F);
+        g.setColor(GRAY);
         g.fillRect(offsetX-2, offsetY-2, width+5, height+5);
-        g.setColor(0xE0E0E0);
+        g.setColor(BACKGROUND_COLOR);
         g.fillRect(offsetX, offsetY, width, height);
 
-        g.setColor(0x000000);
+        g.setColor(BLACK);
         for (int i = 0; i < viewCount; i++)
         {
             int p = viewTop + i;
             if (sel == p)
             {
-                g.setColor(0xFFFF00);
+                g.setColor(YELLOW);
                 g.fillRect(
                     offsetX,
                     i*SMALL_FONT.getHeight() + offsetY,
                     width,
                     SMALL_FONT.getHeight()
                 );
-                g.setColor(0x000000);
+                g.setColor(BLACK);
             }
             g.drawRect(
                 offsetX,
@@ -97,6 +109,7 @@ class Menu
                 width,
                 SMALL_FONT.getHeight()
             );
+            g.setColor(enable[p] ? BLACK : GRAY);
             g.drawString(
                 text[p],
                 DISP_W / 2,
@@ -105,7 +118,7 @@ class Menu
             );
         }
 
-        g.setColor(0xFF0000);
+        g.setColor(RED);
         g.drawRect(
             offsetX,
             (sel-viewTop)*SMALL_FONT.getHeight() + offsetY,

@@ -1,7 +1,7 @@
 
-abstract class Board
+interface Board
 {
-    static final int
+    int
         OPPONENT = 16,
         FU = 1,
         KYO = 2,
@@ -19,47 +19,6 @@ abstract class Board
         RYU = 15,
         OU = 16;
 
-    public abstract int field(int row, int col);
-    public abstract int hands(int player, int kind);
-    public abstract int getStepLimit();
-    public abstract String getTitle();
-
-    public final boolean has(int player, int row, int col)
-    {
-        return player == whose(row, col);
-    }
-
-    public final int whose(int row, int col)
-    {
-        return isOpponent(row, col)
-            ? 1
-            : Math.min(0, field(row, col) - 1);
-    }
-
-    public final int kind(int row, int col)
-    {
-        return isOpponent(row, col)
-            ? field(row, col) - OPPONENT
-            : field(row, col);
-    }
-
-    public final boolean isEmpty(int row, int col)
-    {
-        return field(row, col) == 0;
-    }
-
-    public final boolean isOpponent(int row, int col)
-    {
-        return field(row, col) > OPPONENT;
-    }
-
-    public final boolean isMine(int row, int col)
-    {
-        return 0 < field(row, col) && !isOpponent(row, col);
-    }
-
-    public final boolean inField(int row, int col)
-    {
-        return 0 <= row && row < 9 && 0 <= col && col < 9;
-    }
+    int field(int row, int col);
+    int hands(int player, int kind);
 }
