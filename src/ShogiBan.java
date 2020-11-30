@@ -18,7 +18,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         MY_HAND_OFFSET_Y = BAN_OFFSET_Y + 9*CELL_SIZE + SPACE,
         NUMBER_V_OFFSET_X = BAN_OFFSET_X + 9*CELL_SIZE + SPACE;
 
-    private static int curX, curY, selX, selY, menuCur;
+    private static int curX, curY, selX, selY;
 
     private static Image backgroundImage;
     private static Sprite komaStamp, modeMark;
@@ -153,7 +153,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         g.setColor(LINE_COLOR);
 
         // ??? TE-ME
-        headerOffsetX += SMALL_FONT.stringWidth("000" + WORDS[3]);
+        headerOffsetX += SMALL_FONT.stringWidth("0000" + WORDS[3]);
         g.drawString(
             Integer.toString(Game.getCurrentStep()+1) + WORDS[3],
             headerOffsetX,
@@ -185,12 +185,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 SMALL_FONT.getHeight()
             );
             g.setColor(WHITE);
-            g.drawString(
-                msg,
-                headerOffsetX + 2,
-                0,
-                Graphics.LEFT|Graphics.TOP
-            );
+            g.drawString(msg, headerOffsetX+2, 0, Graphics.LEFT|Graphics.TOP);
             g.setColor(LINE_COLOR);
         }
 
@@ -274,7 +269,6 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         // push stack submenu?
         menuMode = menuId;
-        menuCur = 0;
         switch (menuId)
         {
         case 1:
@@ -329,7 +323,6 @@ final class ShogiBan extends GameCanvas implements GConstants
             render();
         }
     }
-
 
     private void movePlayModeCursor(int keyCode, int action)
     {
@@ -485,7 +478,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         return false;
     }
 
-    void makeStaticImages()
+    private static void makeStaticImages()
     {
          {
             Image img = Image.createImage(DISP_W, DISP_H);

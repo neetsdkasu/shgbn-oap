@@ -195,28 +195,15 @@ final class Game implements Board
     {
         currentStep = 0;
         currentPlayer = firstPlayer;
+        System.arraycopy(Problem.initialHands[0], 0, currentHands[0], 0, 8);
+        System.arraycopy(Problem.initialHands[1], 0, currentHands[1], 0, 8);
         for (int i = 0; i < 9; i++)
         {
-            System.arraycopy(
-                Problem.initialField[i],
-                0,
-                currentField[i],
-                0,
-                currentField[i].length
-            );
+            System.arraycopy(Problem.initialField[i], 0, currentField[i], 0, 9);
         }
-        for (int i = 0; i < 2; i++)
-        {
-            System.arraycopy(
-                Problem.initialHands[i],
-                0,
-                currentHands[i],
-                0,
-                currentHands[i].length
-            );
-        }
-        clearOute();
+        clearRange();
         calcRange();
+        clearOute();
         checkOute();
     }
 
@@ -416,8 +403,9 @@ final class Game implements Board
     {
         currentStep++;
         currentPlayer ^= 1;
-        clearOute();
+        clearRange();
         calcRange();
+        clearOute();
         checkOute();
     }
 
@@ -429,6 +417,21 @@ final class Game implements Board
         }
         range[player][row][col]++;
         return !isEmpty(row, col);
+    }
+
+    private static void clearRange()
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    range[i][row][col] = 0;
+                }
+            }
+        }
+
     }
 
     private static void clearMovable()
@@ -733,17 +736,6 @@ final class Game implements Board
 
     private static void calcRange()
     {
-        for (int i = 0; i < 2; i++)
-        {
-            for (int row = 0; row < 9; row++)
-            {
-                for (int col = 0; col < 9; col++)
-                {
-                    range[i][row][col] = 0;
-                }
-            }
-        }
-
         for (int row = 0; row < 9; row++)
         {
             for (int col = 0; col < 9; col++)
