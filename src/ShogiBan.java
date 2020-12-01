@@ -28,6 +28,8 @@ final class ShogiBan extends GameCanvas implements GConstants
     private static int state = 0;
     private static int menuMode = 0;
 
+    private static int rangeMode = 0;
+
     private static Board board;
 
     private static Menu menu = null;
@@ -318,7 +320,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         if (Game.move(selY, selX, curY, curX, menu.getSelect() == 0))
         {
             state = 0;
-            colorField.fillCells(0, 0, 9, 9, 0);
+            clearMovable();
             closeMenu();
             render();
         }
@@ -374,19 +376,62 @@ final class ShogiBan extends GameCanvas implements GConstants
         render();
     }
 
-    private void showMovable(boolean isCurrentPlayer)
+    private void clearMovable()
     {
-        int another = 4 - 3*Game.getCurrentPlayer();
-        int frame = (isCurrentPlayer ? 2 : another) + 1;
+        if (rangeMode == 0)
+        {
+            colorField.fillCells(0, 0, 9, 9, 0);
+            return;
+        }
         for (int row = 0; row < 9; row++)
         {
             for (int col = 0; col < 9; col++)
             {
-                colorField.setCell(
-                    col,
-                    row,
-                    Game.canMoveTo(row, col) ? frame : 0
-                );
+                int cell = 0;
+                if ((rangeMode&1) != 0 && Game.getRange(0, row, col) > 0)
+                {
+                    cell = 2;
+                }
+                if ((rangeMode&2) != 0 && Game.getRange(1, row, col) > 0)
+                {
+                    cell = Math.max(1, cell) + 4;
+                }
+                colorField.setCell(col, row, cell);
+            }
+        }
+    }
+
+    private void showMovable(boolean showCurrentPlayer)
+    {
+        int frame = 3;
+        if (!showCurrentPlayer)
+        {
+            int another = 1^Game.getCurrentPlayer();
+            frame = (rangeMode & (1 << another)) == 0
+                ? 2 + 3*another
+                : 1;
+        }
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                int cell = 0;
+                if (Game.canMoveTo(row, col))
+                {
+                   cell = frame;
+                }
+                if (cell == 0 || showCurrentPlayer)
+                {
+                    if ((rangeMode&1) != 0 && Game.getRange(0, row, col) > 0)
+                    {
+                        cell = Math.max(1, cell) + 1;
+                    }
+                    if ((rangeMode&2) != 0 && Game.getRange(1, row, col) > 0)
+                    {
+                        cell = Math.max(1, cell) + 4;
+                    }
+                }
+                colorField.setCell(col, row, cell);
             }
         }
     }
@@ -413,7 +458,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 if (state == 4)
                 {
                     state = 0;
-                    colorField.fillCells(0, 0, 9, 9, 0);
+                    clearMovable();
                     return true;
                 }
                 return false;
@@ -423,7 +468,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 if (state == 4)
                 {
                     state = 0;
-                    colorField.fillCells(0, 0, 9, 9, 0);
+                    clearMovable();
                     return true;
                 }
                 return false;
@@ -434,6 +479,10 @@ final class ShogiBan extends GameCanvas implements GConstants
                 selX = curX;
                 selY = curY;
                 state = 1;
+            }
+            else
+            {
+                state = 0;
             }
             return true;
         case 1:
@@ -451,7 +500,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 if (Game.move(selY, selX, curY, curX))
                 {
                     state = 0;
-                    colorField.fillCells(0, 0, 9, 9, 0);
+                    clearMovable();
                     return true;
                 }
             }
@@ -470,7 +519,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             if (Game.put(selX, curY, curX))
             {
                 state = 0;
-                colorField.fillCells(0, 0, 9, 9, 0);
+                clearMovable();
                 return true;
             }
             break;
