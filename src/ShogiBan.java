@@ -24,7 +24,7 @@ final class ShogiBan extends GameCanvas implements GConstants
     private static Sprite komaStamp, modeMark;
     private static TiledLayer komaField, colorField;
 
-    private static int mode = 0;
+    private static int mode = 1;
     private static int state = 0;
     private static int menuMode = 0;
 
@@ -39,15 +39,19 @@ final class ShogiBan extends GameCanvas implements GConstants
         super(false);
         makeStaticImages();
 
-        Problem.setNormalGame();
-        Game.init();
-        board = Game.getInstance();
+        Problem.setPuzzleTemplate();
+        board = Problem.getInstance();
         clearMovable();
     }
 
     boolean isGameMode()
     {
         return mode == 0;
+    }
+
+    boolean isEditMode()
+    {
+        return mode == 1;
     }
 
     void menu()
@@ -235,11 +239,12 @@ final class ShogiBan extends GameCanvas implements GConstants
                 komaStamp.paint(g);
                 if (board.hands(0,k) > 1)
                 {
+                    int wide = board.hands(0,k) > 9 ? 6 : 0;
                     g.setColor(WHITE);
                     g.fillRect(
-                        (k+1)*HANDS_CELL_WIDTH - 7 + BAN_OFFSET_X,
+                        (k+1)*HANDS_CELL_WIDTH - 7 - wide + BAN_OFFSET_X,
                         CELL_SIZE - 12 + MY_HAND_OFFSET_Y,
-                        6,
+                        6 + wide,
                         11
                     );
                     g.setColor(LINE_COLOR);
@@ -261,11 +266,12 @@ final class ShogiBan extends GameCanvas implements GConstants
                 komaStamp.paint(g);
                 if (board.hands(1,k) > 1)
                 {
+                    int wide = board.hands(1,k) > 9 ? 6 : 0;
                     g.setColor(WHITE);
                     g.fillRect(
-                        (k+1)*HANDS_CELL_WIDTH - 7 + BAN_OFFSET_X,
+                        (k+1)*HANDS_CELL_WIDTH - 7 - wide + BAN_OFFSET_X,
                         CELL_SIZE - 12 + OPPO_HAND_OFFSET_Y,
-                        6,
+                        6 + wide,
                         11
                     );
                     g.setColor(LINE_COLOR);
@@ -829,12 +835,12 @@ final class ShogiBan extends GameCanvas implements GConstants
             g.setColor(GREEN);
             g.fillRect(0, 0, img.getWidth(), img.getHeight()/2);
             g.setColor(DARK_GREEN);
-            g.drawString("PLAY", 0, 0, Graphics.LEFT|Graphics.TOP);
+            g.drawString("PLAY", img.getWidth()/2, 0, Graphics.HCENTER|Graphics.TOP);
 
             g.setColor(MAGENTA);
             g.fillRect(0, img.getHeight()/2, img.getWidth(), img.getHeight()/2);
             g.setColor(DARK_MAGENTA);
-            g.drawString("EDIT", 0, img.getHeight()/2, Graphics.LEFT|Graphics.TOP);
+            g.drawString("EDIT", img.getWidth()/2, img.getHeight()/2, Graphics.HCENTER|Graphics.TOP);
 
             img = Image.createImage(img);
             modeMark = new Sprite(img, img.getWidth(), img.getHeight()/2);

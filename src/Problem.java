@@ -83,7 +83,7 @@ final class Problem implements Board
         }
     }
 
-    static void make()
+    static void setPuzzleTemplate()
     {
         clear();
 
@@ -98,6 +98,6 @@ final class Problem implements Board
         initialHands[1][HI-1] = 2;
         initialHands[1][KAKU-1] = 2;
 
-        initialField[1][6] = OU + OPPONENT;
+        initialField[1][7] = OU + OPPONENT;
     }
 }
