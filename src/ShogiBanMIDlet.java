@@ -113,5 +113,16 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         resWords[8] = resChars[35] + resChars[36]; // cancel TORI-KESHI
         resWords[9] = resChars[23] + resChars[24]; // check OU-TE
         resWords[10] = resChars[25] + resChars[27]; // step TSU-MI
+        resWords[11] = resChars[37] + resChars[38]
+                     + resChars[39] + resChars[40]
+                     + resChars[41] + resChars[42]; // switch range view KI-KI-HYO-JI-KIRI-KAE
+        resWords[12] = "1" + resChars[24] + resChars[43] + resChars[30]; // undo 1 step 1-TE-MODO-RU
+        resWords[13] = "1" + resChars[24] + resChars[44] + resChars[45]; // redo 1 step 1-TE-SUSU-MU
+        resWords[14] = resChars[46] + resChars[47]; // overwrite UWA-GAKI
+        resWords[15] = resChars[48] + resChars[49]; // new SHIN-KI
+        resWords[16] = resChars[50] + resChars[51]; // save HO-ZON
+        resWords[17] = resChars[52] + resChars[53]; // reload SAI-KAI
+        resWords[18] = resChars[54] + resChars[29]
+                     + resChars[55] + resChars[56] + resChars[57]; // make mode SAKU-SEI-MO---DO
     }
 }

@@ -42,6 +42,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         Problem.setNormalGame();
         Game.init();
         board = Game.getInstance();
+        clearMovable();
     }
 
     boolean isGameMode()
@@ -51,7 +52,20 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     void menu()
     {
-
+        switch (menuMode)
+        {
+        case 0:
+            if (isGameMode())
+            {
+                openMenu(2);
+                render();
+            }
+            break;
+        case 2:
+            closeMenu();
+            render();
+            break;
+        }
     }
 
     void render()
@@ -276,6 +290,16 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 1:
             menu = Menu.getRankUpMenu().cleanUp();
             break;
+        case 2:
+            menu = Menu.getGameMenu();
+            // TOOD
+            menu.setEnable(1, false);
+            menu.setEnable(2, false);
+            menu.setEnable(3, false);
+            menu.setEnable(4, false);
+            menu.setEnable(5, false);
+            menu.setEnable(6, false);
+            break;
         }
     }
 
@@ -306,12 +330,38 @@ final class ShogiBan extends GameCanvas implements GConstants
             }
             break;
         case 1:
-            actMenuRankUp(keyCode, action);
+            actRankUpMenu(keyCode, action);
+            break;
+        case 2:
+            actGameMenu(keyCode, action);
             break;
         }
     }
 
-    private void actMenuRankUp(int keyCode, int action)
+    private void actGameMenu(int keyCode, int action)
+    {
+        if (action != Canvas.FIRE)
+        {
+            return;
+        }
+        switch (menu.getSelect())
+        {
+        case 0:
+            rangeMode = (rangeMode + 1) % 4;
+            if (state == 0)
+            {
+                clearMovable();
+            }
+            else
+            {
+                showMovable(true);
+            }
+            render();
+            break;
+        }
+    }
+
+    private void actRankUpMenu(int keyCode, int action)
     {
         if (action != Canvas.FIRE)
         {

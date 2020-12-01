@@ -18,13 +18,13 @@ interface GConstants
         DISP_H = 268;
 
     String[]
-        CHARS = new String[50],
+        CHARS = new String[70],
         WORDS = new String[20];
 
     Font
         SMALL_FONT = Font.getFont(
-            0,
-            0,
+            Font.FACE_SYSTEM,
+            Font.STYLE_PLAIN,
             ShogiBanMIDlet.WTK ? Font.SIZE_MEDIUM : Font.SIZE_SMALL
         );
 }

@@ -3,17 +3,37 @@ import javax.microedition.lcdui.*;
 final class Menu implements GConstants
 {
     private static Menu rankUpMenu = null;
-    
+
     static Menu getRankUpMenu()
     {
         if (rankUpMenu == null)
         {
             rankUpMenu = new Menu(1, new String[]{WORDS[6], WORDS[7]});
         }
-        
+
         return rankUpMenu;
     }
-    
+
+    private static Menu gameMenu = null;
+
+    static Menu getGameMenu()
+    {
+        if (gameMenu == null)
+        {
+            gameMenu = new Menu(2, new String[]{
+                WORDS[11],
+                WORDS[12],
+                WORDS[13],
+                WORDS[16],
+                WORDS[17],
+                WORDS[15],
+                WORDS[18]
+            });
+        }
+
+        return gameMenu;
+    }
+
     private static final int
         BACKGROUND_COLOR = 0xE0E0E0;
 
@@ -48,11 +68,16 @@ final class Menu implements GConstants
     {
         return sel;
     }
-    
+
     Menu cleanUp()
     {
         sel = 0;
         return this;
+    }
+
+    void setEnable(int index, boolean e)
+    {
+        enable[index] = e;
     }
 
     boolean keyPressed(int keyCode, int action)
@@ -101,8 +126,8 @@ final class Menu implements GConstants
                     width,
                     SMALL_FONT.getHeight()
                 );
-                g.setColor(BLACK);
             }
+            g.setColor(BLACK);
             g.drawRect(
                 offsetX,
                 i*SMALL_FONT.getHeight() + offsetY,
