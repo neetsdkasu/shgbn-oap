@@ -206,6 +206,7 @@ final class Game implements Board
         clearOute();
         checkOute();
         clearMovable();
+        History.clear();
     }
 
     static boolean put(int kind, int row, int col)
@@ -222,6 +223,8 @@ final class Game implements Board
 
         currentHands[currentPlayer][kind]--;
         currentField[row][col] = (kind + 1) + OPPONENT*currentPlayer;
+
+        History.addFromHand(row, col, currentField[row][col]);
 
         switchNextPlayer();
 
@@ -319,6 +322,14 @@ final class Game implements Board
             rankUp = needRankUp(fromRow, fromCol, toRow);
         }
 
+        History.add(
+            fromRow, fromCol,
+            toRow, toCol,
+            currentField[fromRow][fromCol],
+            currentField[toRow][toCol],
+            rankUp
+        );
+
         if (!isEmpty(toRow, toCol))
         {
             currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]++;
@@ -393,6 +404,78 @@ final class Game implements Board
         return true;
     }
 
+    static void goHistoryPrev()
+    {
+        currentStep--;
+        currentPlayer ^= 1;
+
+        int toRow = History.getToRow();
+        int toCol = History.getToCol();
+
+        if (History.isFromHand())
+        {
+            currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]++;
+            currentField[toRow][toCol] = 0;
+        }
+        else
+        {
+            int fromRow = History.getFromRow();
+            int fromCol = History.getFromCol();
+            int fromKoma = History.getFromKoma();
+            int toKoma = History.getToKoma();
+            currentField[fromRow][fromCol] = fromKoma;
+            currentField[toRow][toCol] = toKoma;
+            if (toKoma != 0)
+            {
+                currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]--;
+            }
+        }
+
+        History.movePrev();
+
+        clearRange();
+        calcRange();
+        clearOute();
+        checkOute();
+        clearMovable();
+    }
+
+    static void goHistoryNext()
+    {
+        History.moveNext();
+
+        int toRow = History.getToRow();
+        int toCol = History.getToCol();
+        int fromKoma = History.getFromKoma();
+
+        if (History.isFromHand())
+        {
+            currentField[toRow][toCol] = fromKoma;
+            currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]--;
+        }
+        else
+        {
+            int fromRow = History.getFromRow();
+            int fromCol = History.getFromCol();
+            int toKoma = History.getToKoma();
+            boolean rankUp = History.getRankUp();
+            if (toKoma != 0)
+            {
+                currentHands[currentPlayer][(kind(toRow, toCol)-1)%8]++;
+            }
+            currentField[fromRow][fromCol] = 0;
+            currentField[toRow][toCol] = fromKoma + (rankUp ? 8 : 0);
+        }
+
+        currentStep++;
+        currentPlayer ^= 1;
+        clearRange();
+        calcRange();
+        clearOute();
+        checkOute();
+        clearMovable();
+    }
+
     private static boolean canGoTo(int row, int col, int dr, int dc)
     {
         return inField(row+dr, col+dc)
@@ -407,6 +490,7 @@ final class Game implements Board
         calcRange();
         clearOute();
         checkOute();
+        clearMovable();
     }
 
     private static boolean addRange(int player, int row, int col)

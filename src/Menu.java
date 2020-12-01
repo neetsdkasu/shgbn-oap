@@ -90,6 +90,8 @@ final class Menu implements GConstants
         case Canvas.DOWN:
             sel = (sel + 1) % text.length;
             break;
+        case Canvas.FIRE:
+            return !enable[sel];
         default:
             return false;
         }

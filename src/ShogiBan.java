@@ -292,9 +292,9 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 2:
             menu = Menu.getGameMenu();
-            // TOOD
-            menu.setEnable(1, false);
-            menu.setEnable(2, false);
+            // TODO
+            menu.setEnable(1, History.hasPrev());
+            menu.setEnable(2, History.hasNext());
             menu.setEnable(3, false);
             menu.setEnable(4, false);
             menu.setEnable(5, false);
@@ -356,6 +356,22 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 showMovable(true);
             }
+            render();
+            break;
+        case 1:
+            Game.goHistoryPrev();
+            menu.setEnable(1, History.hasPrev());
+            menu.setEnable(2, History.hasNext());
+            state = 0;
+            clearMovable();
+            render();
+            break;
+        case 2:
+            Game.goHistoryNext();
+            menu.setEnable(1, History.hasPrev());
+            menu.setEnable(2, History.hasNext());
+            state = 0;
+            clearMovable();
             render();
             break;
         }
