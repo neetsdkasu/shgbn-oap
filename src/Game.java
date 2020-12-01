@@ -205,8 +205,8 @@ final class Game implements Board
         calcRange();
         clearOute();
         checkOute();
+        clearMovable();
     }
-
 
     static boolean put(int kind, int row, int col)
     {
