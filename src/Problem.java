@@ -25,6 +25,8 @@ final class Problem implements Board
         return initialHands[player][kind];
     }
 
+    private static final int MAX_INITIAL_HAND = 18;
+
     private static final int[] zero = new int[9];
 
     private static int stepLimit = 0;
@@ -106,6 +108,16 @@ final class Problem implements Board
         return initialField[row][col] == 0;
     }
 
+    static boolean isEmptyInHands(int player, int kind)
+    {
+        return initialHands[player][kind] == 0;
+    }
+
+    static boolean isFullyInHands(int player, int kind)
+    {
+        return initialHands[player][kind] >= MAX_INITIAL_HAND;
+    }
+
     static boolean isOpponent(int row, int col)
     {
         return initialField[row][col] > OPPONENT;
@@ -168,6 +180,22 @@ final class Problem implements Board
         initialField[row][col] = isOpponent(row, col) ? k : (k+OPPONENT);
     }
 
+    static void incrementInHands(int player, int kind)
+    {
+        initialHands[player][kind] = Math.min(
+            MAX_INITIAL_HAND,
+            initialHands[player][kind] + 1
+        );
+    }
+
+    static void decrementInHands(int player, int kind)
+    {
+        initialHands[player][kind] = Math.max(
+            0,
+            initialHands[player][kind] - 1
+        );
+    }
+
     static void move(int fromRow, int fromCol, int toRow, int toCol)
     {
         if (fromRow == toRow && fromCol == toCol)
@@ -180,9 +208,56 @@ final class Problem implements Board
         }
         if (!isEmpty(toRow, toCol))
         {
-            initialHands[whose(toRow, toCol)][(kind(toRow, toCol)-1)%8]++;
+            incrementInHands(whose(toRow, toCol), (kind(toRow, toCol)-1)%8);
         }
         initialField[toRow][toCol] = initialField[fromRow][fromCol];
         initialField[fromRow][fromCol] = 0;
+    }
+
+    static void moveIntoHands(int fromRow, int fromCol, int toPlayer)
+    {
+        if (isEmpty(fromRow, fromCol))
+        {
+            return;
+        }
+        incrementInHands(toPlayer, (kind(fromRow, fromCol)-1)%8);
+        initialField[fromRow][fromCol] = 0;
+    }
+
+    static void put(int fromPlayer, int kind, int toRow, int toCol)
+    {
+        if (isEmptyInHands(fromPlayer, kind))
+        {
+            return;
+        }
+        if (!isEmpty(toRow, toCol))
+        {
+            incrementInHands(whose(toRow, toCol), (kind(toRow, toCol)-1)%8);
+        }
+        decrementInHands(fromPlayer, kind);
+        int koma = kind+1;
+        if (koma == GYOKU && fromPlayer == 1)
+        {
+            koma = OU;
+        }
+        else if (koma == OU && fromPlayer == 0)
+        {
+            koma = GYOKU;
+        }
+        initialField[toRow][toCol] = koma + fromPlayer*OPPONENT;
+    }
+
+    static void give(int fromPlayer, int kind, int toPlayer)
+    {
+        if (isEmptyInHands(fromPlayer, kind))
+        {
+            return;
+        }
+        if (isFullyInHands(toPlayer, kind))
+        {
+            return;
+        }
+        incrementInHands(toPlayer, kind);
+        decrementInHands(fromPlayer, kind);
     }
 }

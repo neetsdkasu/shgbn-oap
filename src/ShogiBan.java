@@ -135,11 +135,39 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         else if (isEditMode())
         {
-            if (state == 1)
+            if (state != 0)
             {
                 renderBanCursor(g, selX, selY, GREEN);
+                if (curY >= 9)
+                {
+                    renderHandsCursor(g, curY, CURSOR_COLOR);
+                    return;
+                }
             }
             renderBanCursor(g, curX, curY, CURSOR_COLOR);
+        }
+    }
+
+    private void renderHandsCursor(Graphics g, int y, int color)
+    {
+        g.setColor(color);
+        if (y == 9)
+        {
+            g.drawRect(
+                BAN_OFFSET_X,
+                MY_HAND_OFFSET_Y,
+                9*CELL_SIZE,
+                CELL_SIZE
+            );
+        }
+        else
+        {
+            g.drawRect(
+                BAN_OFFSET_X,
+                OPPO_HAND_OFFSET_Y,
+                9*CELL_SIZE,
+                CELL_SIZE
+            );
         }
     }
 
@@ -320,6 +348,9 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 4:
             menu = Menu.getEditMenuOnHand().cleanUp();
+            menu.setEnable(0, !Problem.isEmptyInHands(selY-9, selX));
+            menu.setEnable(1, !Problem.isFullyInHands(selY-9, selX));
+            menu.setEnable(2, !Problem.isEmptyInHands(selY-9, selX));
             break;
         }
     }
@@ -363,7 +394,34 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 3:
             actEditMenuOnBan(keyCode, action);
             break;
+        case 4:
+            actEditMenuOnHand(keyCode, action);
+            break;
         }
+    }
+
+    private void actEditMenuOnHand(int keyCode, int action)
+    {
+        if (action != Canvas.FIRE)
+        {
+            return;
+        }
+        switch (menu.getSelect())
+        {
+        case 0:
+            state = 2;
+            break;
+        case 1:
+            Problem.incrementInHands(selY-9, selX);
+            break;
+        case 2:
+            Problem.decrementInHands(selY-9, selX);
+            break;
+        default:
+            return;
+        }
+        closeMenu();
+        render();
     }
 
     private void actEditMenuOnBan(int keyCode, int action)
@@ -521,10 +579,26 @@ final class ShogiBan extends GameCanvas implements GConstants
             if (curY < 9)
             {
                 Problem.move(selY, selX, curY, curX);
-                state = 0;
-                colorField.setCell(selX, selY, 0);
-                return true;
             }
+            else
+            {
+                Problem.moveIntoHands(selY, selX, curY - 9);
+            }
+            state = 0;
+            colorField.setCell(selX, selY, 0);
+            return true;
+        case 2:
+            if (curY < 9)
+            {
+                Problem.put(selY - 9, selX, curY, curX);
+            }
+            else
+            {
+                Problem.give(selY - 9, selX, curY - 9);
+            }
+            state = 0;
+            return true;
+        default:
             break;
         }
         return false;
