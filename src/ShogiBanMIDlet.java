@@ -124,5 +124,11 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         resWords[17] = resChars[52] + resChars[53]; // reload SAI-KAI
         resWords[18] = resChars[54] + resChars[29]
                      + resChars[55] + resChars[56] + resChars[57]; // make mode SAKU-SEI-MO---DO
+        resWords[19] = resChars[58] + resChars[59]; // move I-DOU
+        resWords[20] = resChars[60] + resChars[61] + resChars[62]; // flip URA-GAE-SU
+        resWords[21] = resChars[63] + resChars[38]
+                     + resChars[64] + resChars[65]; // change owner MU-KI-HEN-KOU
+        resWords[22] = resChars[66] + resChars[67] + resChars[62]; // increment FU-YA-SU
+        resWords[23] = resChars[68] + resChars[69] + resChars[62]; // decrement HE-RA-SU
     }
 }

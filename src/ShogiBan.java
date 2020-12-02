@@ -133,6 +133,14 @@ final class ShogiBan extends GameCanvas implements GConstants
             }
             renderBanCursor(g, curX, curY, CURSOR_COLOR);
         }
+        else if (isEditMode())
+        {
+            if (state == 1)
+            {
+                renderBanCursor(g, selX, selY, GREEN);
+            }
+            renderBanCursor(g, curX, curY, CURSOR_COLOR);
+        }
     }
 
     private void renderBanCursor(Graphics g, int x, int y, int color)
@@ -306,6 +314,13 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu.setEnable(5, false);
             menu.setEnable(6, false);
             break;
+        case 3:
+            menu = Menu.getEditMenuOnBan().cleanUp();
+            menu.setEnable(1, Problem.canFlip(selY, selX));
+            break;
+        case 4:
+            menu = Menu.getEditMenuOnHand().cleanUp();
+            break;
         }
     }
 
@@ -334,6 +349,10 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 movePlayModeCursor(keyCode, action);
             }
+            else if (isEditMode())
+            {
+                moveEditModeCursor(keyCode, action);
+            }
             break;
         case 1:
             actRankUpMenu(keyCode, action);
@@ -341,7 +360,35 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 2:
             actGameMenu(keyCode, action);
             break;
+        case 3:
+            actEditMenuOnBan(keyCode, action);
+            break;
         }
+    }
+
+    private void actEditMenuOnBan(int keyCode, int action)
+    {
+        if (action != Canvas.FIRE)
+        {
+            return;
+        }
+        switch (menu.getSelect())
+        {
+        case 0:
+            state = 1;
+            colorField.setCell(selX, selY, 3);
+            break;
+        case 1:
+            Problem.flip(selY, selX);
+            break;
+        case 2:
+            Problem.changeOwner(selY, selX);
+            break;
+        default:
+            return;
+        }
+        closeMenu();
+        render();
     }
 
     private void actGameMenu(int keyCode, int action)
@@ -396,6 +443,91 @@ final class ShogiBan extends GameCanvas implements GConstants
             closeMenu();
             render();
         }
+    }
+
+    private void moveEditModeCursor(int keyCode, int action)
+    {
+        switch (action)
+        {
+        case Canvas.UP:
+            curY = (curY + 10) % 11;
+            if (curY == 10 && curX == 8)
+            {
+                curX = 7;
+            }
+            break;
+        case Canvas.DOWN:
+            curY = (curY + 1) % 11;
+            if (curY == 9 && curX == 8)
+            {
+                curX = 7;
+            }
+            break;
+        case Canvas.LEFT:
+            if (curY < 9)
+            {
+                curX = (curX + 8) % 9;
+            }
+            else
+            {
+                curX = (curX + 7) % 8;
+            }
+            break;
+        case Canvas.RIGHT:
+            if (curY < 9)
+            {
+                curX = (curX + 1) % 9;
+            }
+            else
+            {
+                curX = (curX + 1) % 8;
+            }
+            break;
+        case Canvas.FIRE:
+            if (!fireEditMode())
+            {
+                return;
+            }
+            break;
+        default:
+            return;
+        }
+        render();
+    }
+
+    private boolean fireEditMode()
+    {
+        switch (state)
+        {
+        case 0:
+            if (curY < 9)
+            {
+                if (Problem.isEmpty(curY, curX))
+                {
+                    return false;
+                }
+                selX = curX;
+                selY = curY;
+                openMenu(3);
+            }
+            else
+            {
+                selX = curX;
+                selY = curY;
+                openMenu(4);
+            }
+            return true;
+        case 1:
+            if (curY < 9)
+            {
+                Problem.move(selY, selX, curY, curX);
+                state = 0;
+                colorField.setCell(selX, selY, 0);
+                return true;
+            }
+            break;
+        }
+        return false;
     }
 
     private void movePlayModeCursor(int keyCode, int action)

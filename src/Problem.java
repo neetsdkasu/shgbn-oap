@@ -100,4 +100,89 @@ final class Problem implements Board
 
         initialField[1][7] = OU + OPPONENT;
     }
+
+    static boolean isEmpty(int row, int col)
+    {
+        return initialField[row][col] == 0;
+    }
+
+    static boolean isOpponent(int row, int col)
+    {
+        return initialField[row][col] > OPPONENT;
+    }
+
+    static int kind(int row, int col)
+    {
+        return isOpponent(row, col)
+            ? initialField[row][col] - OPPONENT
+            : initialField[row][col];
+    }
+
+    static int whose(int row, int col)
+    {
+        return isOpponent(row, col)
+            ? 1
+            : Math.min(0, initialField[row][col] - 1);
+    }
+
+    static boolean canFlip(int row, int col)
+    {
+        switch (kind(row, col))
+        {
+        case 0:
+        case KIN:
+        case GYOKU:
+        case OU:
+            return false;
+        default:
+            return true;
+        }
+    }
+
+    static void flip(int row, int col)
+    {
+        if (!canFlip(row, col))
+        {
+            return;
+        }
+        int k = kind(row, col);
+        k = k >= GYOKU ? (k-8) : (k+8);
+        initialField[row][col] = isOpponent(row, col) ? k + OPPONENT : k;
+    }
+
+    static void changeOwner(int row, int col)
+    {
+        if (isEmpty(row, col))
+        {
+            return;
+        }
+        int k = kind(row, col);
+        if (k == GYOKU)
+        {
+            k = OU;
+        }
+        else if (k == OU)
+        {
+            k = GYOKU;
+        }
+        initialField[row][col] = isOpponent(row, col) ? k : (k+OPPONENT);
+    }
+
+    static void move(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        if (fromRow == toRow && fromCol == toCol)
+        {
+            return;
+        }
+        if (isEmpty(fromRow, fromCol))
+        {
+            return;
+        }
+        if (!isEmpty(toRow, toCol))
+        {
+            initialHands[whose(toRow, toCol)][(kind(toRow, toCol)-1)%8]++;
+        }
+        initialField[toRow][toCol] = initialField[fromRow][fromCol];
+        initialField[fromRow][fromCol] = 0;
+    }
 }

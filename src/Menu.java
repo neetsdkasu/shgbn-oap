@@ -34,6 +34,38 @@ final class Menu implements GConstants
         return gameMenu;
     }
 
+    private static Menu editMenuOnBan = null;
+
+    static Menu getEditMenuOnBan()
+    {
+        if (editMenuOnBan == null)
+        {
+            editMenuOnBan = new Menu(3, new String[]{
+                WORDS[19],
+                WORDS[20],
+                WORDS[21]
+            });
+        }
+
+        return editMenuOnBan;
+    }
+
+    private static Menu editMenuOnHand = null;
+
+    static Menu getEditMenuOnHand()
+    {
+        if (editMenuOnHand == null)
+        {
+            editMenuOnHand = new Menu(4, new String[]{
+                WORDS[19],
+                WORDS[22],
+                WORDS[23]
+            });
+        }
+
+        return editMenuOnHand;
+    }
+
     private static final int
         BACKGROUND_COLOR = 0xE0E0E0;
 
