@@ -104,7 +104,7 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
 
         resWords[0] = resChars[31] + resChars[24]; // first player SEN-TE
         resWords[1] = resChars[32] + resChars[24]; // second player GO-TE
-        resWords[2] = resChars[24] + resChars[25] + resChars[26]; // step limit TE-DU-ME
+        resWords[2] = resChars[24] + resChars[25]; // step limit TE-DUME
         resWords[3] = resChars[24] + resChars[33]; // step TE-ME
         resWords[4] = resWords[0] + resChars[34]; // first player's turn SEN-TE-BAN
         resWords[5] = resWords[1] + resChars[34]; // second player's turn GO-TE-BAN
@@ -130,5 +130,8 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
                      + resChars[64] + resChars[65]; // change owner MU-KI-HEN-KOU
         resWords[22] = resChars[66] + resChars[67] + resChars[62]; // increment FU-YA-SU
         resWords[23] = resChars[68] + resChars[69] + resChars[62]; // decrement HE-RA-SU
+        resWords[24] = resChars[70] + resChars[71]
+                     + resChars[55] + resChars[56] + resChars[57]; // play mode SHI-KOU-MO---DO
+        resWords[25] = resChars[72] + resChars[73]; // read YOMI-DASHI
     }
 }

@@ -46,6 +46,11 @@ final class Problem implements Board
         return stepLimit;
     }
 
+    static void setStepLimit(int v)
+    {
+        stepLimit = v;
+    }
+
     static void clear()
     {
         System.arraycopy(zero, 0, initialHands[0], 0, 8);

@@ -66,6 +66,24 @@ final class Menu implements GConstants
         return editMenuOnHand;
     }
 
+    private static Menu editMenu = null;
+
+    static Menu getEditMenu()
+    {
+        if (editMenu == null)
+        {
+            editMenu = new Menu(5, new String[]{
+                "< 0000" + WORDS[2] + " >",
+                WORDS[16],
+                WORDS[25],
+                WORDS[15],
+                WORDS[24]
+            });
+        }
+
+        return editMenu;
+    }
+
     private static final int
         BACKGROUND_COLOR = 0xE0E0E0;
 
@@ -76,6 +94,7 @@ final class Menu implements GConstants
     int sel = 0;
     int width = 0, height = 0, offsetX, offsetY;
     int viewCount, viewTop = 0;
+    int value = 0;
 
     Menu(int num, String[] t)
     {
@@ -104,7 +123,18 @@ final class Menu implements GConstants
     Menu cleanUp()
     {
         sel = 0;
+        value = 0;
         return this;
+    }
+
+    void setValue(int v)
+    {
+        value = v;
+    }
+
+    int getValue()
+    {
+        return value;
     }
 
     void setEnable(int index, boolean e)
@@ -121,6 +151,20 @@ final class Menu implements GConstants
             break;
         case Canvas.DOWN:
             sel = (sel + 1) % text.length;
+            break;
+        case Canvas.LEFT:
+            if (id != 5 || sel != 0)
+            {
+                return false;
+            }
+            value = Math.max(0, value - 2);
+            break;
+        case Canvas.RIGHT:
+            if (id != 5 || sel != 0)
+            {
+                return false;
+            }
+            value = value == 0 ? 1 : (value + 2);
             break;
         case Canvas.FIRE:
             return !enable[sel];
@@ -169,8 +213,14 @@ final class Menu implements GConstants
                 SMALL_FONT.getHeight()
             );
             g.setColor(enable[p] ? BLACK : GRAY);
+            String s = text[p];
+            if (id == 5 && p == 0)
+            {
+                s = (value == 0 ? "  " : "< ")
+                  + Integer.toString(value) + WORDS[2] + " >";
+            }
             g.drawString(
-                text[p],
+                s,
                 DISP_W / 2,
                 (i+1)*SMALL_FONT.getHeight() + offsetY,
                 Graphics.HCENTER|Graphics.BOTTOM

@@ -64,8 +64,14 @@ final class ShogiBan extends GameCanvas implements GConstants
                 openMenu(2);
                 render();
             }
+            else if (isEditMode())
+            {
+                openMenu(5);
+                render();
+            }
             break;
         case 2:
+        case 5:
             closeMenu();
             render();
             break;
@@ -352,6 +358,15 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu.setEnable(1, !Problem.isFullyInHands(selY-9, selX));
             menu.setEnable(2, !Problem.isEmptyInHands(selY-9, selX));
             break;
+        case 5:
+            menu = Menu.getEditMenu();
+            menu.setValue(Problem.getStepLimit());
+            // TODO
+            menu.setEnable(1, false);
+            menu.setEnable(2, false);
+            menu.setEnable(3, false);
+            menu.setEnable(4, false);
+            break;
         }
     }
 
@@ -362,6 +377,11 @@ final class ShogiBan extends GameCanvas implements GConstants
         menu = null;
     }
 
+    protected void keyRepeated(int keyCode)
+    {
+        keyPressed(keyCode);
+    }
+
     protected void keyPressed(int keyCode)
     {
         int action = getGameAction(keyCode);
@@ -369,6 +389,10 @@ final class ShogiBan extends GameCanvas implements GConstants
         {
             if (menu.keyPressed(keyCode, action))
             {
+                if (menuMode == 5)
+                {
+                    Problem.setStepLimit(menu.getValue());
+                }
                 render();
                 return;
             }
