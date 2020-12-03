@@ -31,6 +31,8 @@ final class Problem implements Board
 
     private static int stepLimit = 0;
     private static String title = "";
+    private static int id = 0;
+    private static long date = 0L;
 
     static final int[][]
         initialField = new int[9][9],
@@ -51,8 +53,13 @@ final class Problem implements Board
         stepLimit = v;
     }
 
-    static void clear()
+    private static void clear()
     {
+        stepLimit = 0;
+        title = "";
+        id = 0;
+        date = 0L;
+
         System.arraycopy(zero, 0, initialHands[0], 0, 8);
         System.arraycopy(zero, 0, initialHands[1], 0, 8);
         for (int i = 0; i < 9; i++)
@@ -64,9 +71,6 @@ final class Problem implements Board
     static void setNormalGame()
     {
         clear();
-
-        stepLimit = 0;
-        title = "";
 
         for (int i = 0; i < 4; i++)
         {
@@ -93,9 +97,6 @@ final class Problem implements Board
     static void setPuzzleTemplate()
     {
         clear();
-
-        stepLimit = 0;
-        title = "";
 
         initialHands[1][FU-1] = 18;
         initialHands[1][KYO-1] = 4;

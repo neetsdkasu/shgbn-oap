@@ -84,6 +84,22 @@ final class Menu implements GConstants
         return editMenu;
     }
 
+    private static Menu saveMenu = null;
+
+    static Menu getSaveMenu()
+    {
+        if (saveMenu == null)
+        {
+            saveMenu = new Menu(6, new String[]{
+                WORDS[15] + WORDS[16],
+                WORDS[14] + WORDS[16],
+                WORDS[8]
+            });
+        }
+
+        return saveMenu;
+    }
+
     private static final int
         BACKGROUND_COLOR = 0xE0E0E0;
 

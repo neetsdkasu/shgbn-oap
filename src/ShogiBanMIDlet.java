@@ -4,6 +4,8 @@ import javax.microedition.lcdui.Command;
 import javax.microedition.lcdui.CommandListener;
 import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Displayable;
+import javax.microedition.lcdui.TextBox;
+import javax.microedition.lcdui.TextField;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.midlet.MIDletStateChangeException;
 
@@ -13,13 +15,23 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         String.valueOf(System.getProperty("microedition.platform"))
             .startsWith("Sun");
 
-    private final ShogiBan shogiBan;
+    private static ShogiBanMIDlet midlet = null;
 
-    private final Command exitCommand, menuCommand;
+    private static TextBox textBox = null;
+
+    private static ShogiBan shogiBan = null;
+
+    private static Command
+        exitCommand = null,
+        menuCommand = null,
+        saveCommand = null,
+        cancelCommand = null;
 
     public ShogiBanMIDlet()
     {
         loadResources();
+
+        midlet = this;
 
         exitCommand = new Command("EXIT", Command.EXIT, 1);
         menuCommand = new Command("MENU", Command.SCREEN, 1);
@@ -49,6 +61,10 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
 
 	public void commandAction(Command cmd, Displayable disp)
 	{
+        if (cmd == null)
+        {
+            return;
+        }
         if (cmd == exitCommand)
         {
 			notifyDestroyed();
@@ -57,6 +73,39 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         {
             shogiBan.menu();
         }
+        else if (cmd == saveCommand)
+        {
+            String title = textBox.getString();
+            if (title == null)
+            {
+                title = "";
+            }
+            shogiBan.save(title);
+            Display.getDisplay(this).setCurrent(shogiBan);
+        }
+        else if (cmd == cancelCommand)
+        {
+            shogiBan.save(null);
+            Display.getDisplay(this).setCurrent(shogiBan);
+        }
+    }
+
+    static void showTextBox(String title)
+    {
+        if (textBox == null)
+        {
+            textBox = new TextBox(GConstants.WORDS[26], title, 50, TextField.ANY);
+            saveCommand = new Command("SAVE", Command.OK, 1);
+            cancelCommand = new Command("CANCEL", Command.CANCEL, 2);
+            textBox.addCommand(saveCommand);
+            textBox.addCommand(cancelCommand);
+            textBox.setCommandListener(midlet);
+        }
+        else
+        {
+            textBox.setString(title);
+        }
+        Display.getDisplay(midlet).setCurrent(textBox);
     }
 
     private static void loadResources()
@@ -133,5 +182,7 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         resWords[24] = resChars[70] + resChars[71]
                      + resChars[55] + resChars[56] + resChars[57]; // play mode SHI-KOU-MO---DO
         resWords[25] = resChars[72] + resChars[73]; // read YOMI-DASHI
+        resWords[26] = resChars[50] + resChars[51]
+                     + resChars[74] + resChars[75] + resChars[76]; // save HO-ZON-MEI-SHI-TEI
     }
 }
