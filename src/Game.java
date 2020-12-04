@@ -42,7 +42,7 @@ final class Game implements Board
     {
         Problem.date = System.currentTimeMillis();
         Problem.update = date;
-        Problem.recordId = 0;
+        Problem.recordID = 0;
         System.arraycopy(currentHands[0], 0, Problem.initialHands[0], 0, 8);
         System.arraycopy(currentHands[1], 0, Problem.initialHands[1], 0, 8);
         for (int i = 0; i < 9; i++)
@@ -74,8 +74,9 @@ final class Game implements Board
         danger = new boolean[2],
         checkmate = new boolean[2];
 
+    private static String title = "";
     static long date = 0L, update = 0L;
-    static int recordId = 0;
+    static int recordID = 0;
 
     static int getFirstPlayer()
     {
@@ -90,6 +91,20 @@ final class Game implements Board
     static int getCurrentStep()
     {
         return currentStep;
+    }
+
+    static String getTitle()
+    {
+        if (title == null || title.length() == 0)
+        {
+            return Problem.getTitle();
+        }
+        return title;
+    }
+
+    static void setTitle(String t)
+    {
+        title = t;
     }
 
     static boolean isDanger()

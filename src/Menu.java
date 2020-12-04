@@ -21,13 +21,13 @@ final class Menu implements GConstants
         if (gameMenu == null)
         {
             gameMenu = new Menu(2, new String[]{
-                WORDS[11],
-                WORDS[12],
-                WORDS[13],
-                WORDS[16],
-                WORDS[17],
-                WORDS[15],
-                WORDS[18]
+                WORDS[11], // change range view
+                WORDS[12], // prev 1 step
+                WORDS[13], // next 1 step
+                WORDS[16], // save
+                WORDS[17], // replay
+                WORDS[15], // new
+                WORDS[18]  // change mode
             });
         }
 
@@ -41,9 +41,9 @@ final class Menu implements GConstants
         if (editMenuOnBan == null)
         {
             editMenuOnBan = new Menu(3, new String[]{
-                WORDS[19],
-                WORDS[20],
-                WORDS[21]
+                WORDS[19], // move
+                WORDS[20], // flip
+                WORDS[21]  // change owner
             });
         }
 
@@ -57,9 +57,9 @@ final class Menu implements GConstants
         if (editMenuOnHand == null)
         {
             editMenuOnHand = new Menu(4, new String[]{
-                WORDS[19],
-                WORDS[22],
-                WORDS[23]
+                WORDS[19], // move
+                WORDS[22], // increment
+                WORDS[23]  // decrement
             });
         }
 
@@ -73,11 +73,11 @@ final class Menu implements GConstants
         if (editMenu == null)
         {
             editMenu = new Menu(5, new String[]{
-                "< 0000" + WORDS[2] + " >",
-                WORDS[16],
-                WORDS[25],
-                WORDS[15],
-                WORDS[24]
+                "< 0000" + WORDS[2] + " >", // step limit
+                WORDS[16], // save
+                WORDS[25], // load
+                WORDS[15], // new
+                WORDS[24]  // change mode
             });
         }
 
@@ -91,13 +91,55 @@ final class Menu implements GConstants
         if (saveMenu == null)
         {
             saveMenu = new Menu(6, new String[]{
-                WORDS[15] + WORDS[16],
-                WORDS[14] + WORDS[16],
-                WORDS[8]
+                WORDS[15] + WORDS[16], // create
+                WORDS[14] + WORDS[16], // overwrite
+                WORDS[8] // cancel
             });
+            saveMenu.setCancelItem(2);
         }
 
         return saveMenu;
+    }
+    
+    private static Menu listProblemMenu = null;
+    
+    static Menu getListProblemMenu()
+    {
+        String[] list = Storage.listUpProblem();
+        if (listProblemMenu != null)
+        {
+            if (list[0] == listProblemMenu.text[0])
+            {
+                return listProblemMenu;
+            }
+        }
+        String[] items = new String[list.length + 1];
+        System.arraycopy(list, 0, items, 0, list.length);
+        items[items.length-1] = WORDS[8];
+        listProblemMenu = new Menu(7, items);
+        listProblemMenu.setCancelItem(items.length-1);
+        return listProblemMenu;
+    }
+    
+    private static Menu loadProblemMenu = null;
+    
+    static Menu getLoadProblemMenu()
+    {
+        if (loadProblemMenu == null)
+        {
+            loadProblemMenu = new Menu(8, new String[]{
+                "", 
+                WORDS[25], // load
+                WORDS[27], // delete
+                WORDS[8]   // cancel                
+            });
+            loadProblemMenu.setEnable(0, false);
+            loadProblemMenu.setCancelItem(3);
+        }
+        
+        loadProblemMenu.setText(0, listProblemMenu.getText());
+        
+        return loadProblemMenu;
     }
 
     private static final int
@@ -107,7 +149,7 @@ final class Menu implements GConstants
     String[] text;
     int[] textWidth;
     int id;
-    int sel = 0;
+    int sel = 0, cancel = -1;
     int width = 0, height = 0, offsetX, offsetY;
     int viewCount, viewTop = 0;
     int value = 0;
@@ -151,6 +193,39 @@ final class Menu implements GConstants
     int getValue()
     {
         return value;
+    }
+    
+    String getText()
+    {
+        return text[sel];
+    }
+    
+    String getText(int i)
+    {
+        return text[i];
+    }
+    
+    void setCancelItem(int i)
+    {
+        cancel = i;
+    }
+    
+    boolean canceled()
+    {
+        return cancel == sel;
+    }
+    
+    void setText(int pos, String t)
+    {
+        text[pos] = t;
+        textWidth[pos] = SMALL_FONT.stringWidth(t);
+        width = 0;
+        for (int i = 0; i < text.length; i++)
+        {
+            width = Math.max(width, textWidth[i]);
+        }
+        width = Math.min(width + 20, 220);
+        offsetX = (DISP_W - width) / 2;
     }
 
     void setEnable(int index, boolean e)

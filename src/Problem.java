@@ -37,7 +37,7 @@ final class Problem implements Board
     private static int stepLimit = 0;
     private static String title = "";
 
-    static int recordId = 0;
+    static int recordID = 0;
     static long date = 0L, update = 0L;
 
     static final int[][]
@@ -66,12 +66,50 @@ final class Problem implements Board
 
     static void writeTo(DataOutput out) throws IOException
     {
+        out.writeInt(recordID);
+        out.writeLong(date);
+        out.writeLong(update);
+        out.writeUTF(title);
 
+        out.writeInt(stepLimit);
+        for (int i = 0; i < 2; i++)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                out.writeByte(initialHands[i][k]);
+            }
+        }
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                out.writeByte(initialField[row][col]);
+            }
+        }
     }
 
     static void readFrom(DataInput in) throws IOException
     {
+        recordID = in.readInt();
+        date = in.readLong();
+        update = in.readLong();
+        title = in.readUTF();
 
+        stepLimit = in.readInt();
+        for (int i = 0; i < 2; i++)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                initialHands[i][k] = in.readUnsignedByte();
+            }
+        }
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                initialField[row][col] = in.readUnsignedByte();
+            }
+        }
     }
 
     private static void generateTitle()
@@ -97,7 +135,7 @@ final class Problem implements Board
     private static void clear()
     {
         stepLimit = 0;
-        recordId = 0;
+        recordID = 0;
         date = System.currentTimeMillis();
         update = date;
         generateTitle();

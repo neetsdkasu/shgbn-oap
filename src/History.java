@@ -1,3 +1,6 @@
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 final class History
 {
@@ -14,6 +17,16 @@ final class History
     private static int
         insertPos = 0,
         count = 0;
+
+    static void writeTo(DataOutput out) throws IOException
+    {
+
+    }
+
+    static void readFrom(DataInput in) throws IOException
+    {
+
+    }
 
     static int getCount()
     {

@@ -65,10 +65,15 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         if (isGameMode())
         {
+            if (!title.equals(Problem.getTitle()))
+            {
+                Game.setTitle(title);
+            }
             Storage.saveGame(false);
         }
         else if (isEditMode())
         {
+            Problem.setTitle(title);
             Storage.saveProblem(false);
         }
         setTicker(new Ticker("saved"));
@@ -146,7 +151,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         else if (isEditMode())
         {
-            g.setColor(Problem.recordId == 0 ? GRAY : LINE_COLOR);
+            g.setColor(Problem.recordID == 0 ? GRAY : LINE_COLOR);
             g.drawString(
                 Problem.getTitle(),
                 headerOffsetX,
@@ -396,8 +401,8 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 5:
             menu = Menu.getEditMenu();
             menu.setValue(Problem.getStepLimit());
+            menu.setEnable(2, Storage.hasProblem()); // load
             // TODO
-            menu.setEnable(2, false); // load
             menu.setEnable(3, false); // new
             menu.setEnable(4, false); // change mode
             break;
@@ -405,6 +410,14 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu = Menu.getSaveMenu().cleanUp();
             // TODO
             menu.setEnable(1, false);
+            break;
+        case 7:
+            menu = Menu.getListProblemMenu();
+            break;
+        case 8:
+            menu = Menu.getLoadProblemMenu().cleanUp();
+            // TODO
+            menu.setEnable(2, false); // delete
             break;
         }
     }
@@ -470,6 +483,56 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 6:
             actSaveMenu(keyCode, action);
             break;
+        case 7:
+            actListProblemMenu(keyCode, action);
+            break;
+        case 8:
+            actLoadProblemMenu(keyCode, action);
+            break;
+        }
+    }
+
+    private void actLoadProblemMenu(int keyCode, int action)
+    {
+        if (action != Canvas.FIRE)
+        {
+            return;
+        }
+        switch (menu.getSelect())
+        {
+        case 1: // load
+            int sel = Menu.getListProblemMenu().getSelect();
+            Storage.loadProblem(sel);
+            closeMenu();
+            break;
+        case 2: // delete
+            // TODO
+            break;
+        case 3: // cancel
+            openMenu(7);
+            break;
+        }
+        render();
+    }
+
+    private void actListProblemMenu(int keyCode, int action)
+    {
+        if (action != Canvas.FIRE)
+        {
+            return;
+        }
+        if (menu.canceled())
+        {
+            if (isEditMode())
+            {
+                openMenu(5);
+                render();
+            }
+        }
+        else
+        {
+            openMenu(8);
+            render();
         }
     }
 
@@ -524,6 +587,9 @@ final class ShogiBan extends GameCanvas implements GConstants
             render();
             break;
         case 2: // load
+            openMenu(7);
+            render();
+            break;
         case 3: // new
         case 4: // change mode
         default:

@@ -183,7 +183,7 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         resWords[14] = resChars[46] + resChars[47]; // overwrite UWA-GAKI
         resWords[15] = resChars[48] + resChars[49]; // new SHIN-KI
         resWords[16] = resChars[50] + resChars[51]; // save HO-ZON
-        resWords[17] = resChars[52] + resChars[53]; // reload SAI-KAI
+        resWords[17] = resChars[52] + resChars[53]; // replay SAI-KAI
         resWords[18] = resChars[54] + resChars[29]
                      + resChars[55] + resChars[56] + resChars[57]; // make mode SAKU-SEI-MO---DO
         resWords[19] = resChars[58] + resChars[59]; // move I-DOU
@@ -197,5 +197,6 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         resWords[25] = resChars[72] + resChars[73]; // read YOMI-DASHI
         resWords[26] = resChars[50] + resChars[51]
                      + resChars[74] + resChars[75] + resChars[76]; // save HO-ZON-MEI-SHI-TEI
+        resWords[27] = resChars[77] + resChars[78]; // delete SAKU-JO
     }
 }
