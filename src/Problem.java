@@ -1,3 +1,8 @@
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 
 final class Problem implements Board
 {
@@ -31,8 +36,9 @@ final class Problem implements Board
 
     private static int stepLimit = 0;
     private static String title = "";
-    private static int id = 0;
-    private static long date = 0L;
+
+    static int recordId = 0;
+    static long date = 0L, update = 0L;
 
     static final int[][]
         initialField = new int[9][9],
@@ -41,6 +47,11 @@ final class Problem implements Board
     static String getTitle()
     {
         return title;
+    }
+
+    static void setTitle (String t)
+    {
+        title = t;
     }
 
     static int getStepLimit()
@@ -53,12 +64,43 @@ final class Problem implements Board
         stepLimit = v;
     }
 
+    static void writeTo(DataOutput out) throws IOException
+    {
+
+    }
+
+    static void readFrom(DataInput in) throws IOException
+    {
+
+    }
+
+    private static void generateTitle()
+    {
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date(date));
+        int y = c.get(Calendar.YEAR);
+        int m = c.get(Calendar.MONTH) + 1;
+        int d = c.get(Calendar.DATE);
+        int h = c.get(Calendar.HOUR_OF_DAY);
+        int n = c.get(Calendar.MINUTE);
+        title = Integer.toString(y)
+              + "-"
+              + Integer.toString(100+m).substring(1)
+              + "-"
+              + Integer.toString(100+d).substring(1)
+              + " "
+              + Integer.toString(100+h).substring(1)
+              + ":"
+              + Integer.toString(100+n).substring(1);
+    }
+
     private static void clear()
     {
         stepLimit = 0;
-        title = "";
-        id = 0;
-        date = 0L;
+        recordId = 0;
+        date = System.currentTimeMillis();
+        update = date;
+        generateTitle();
 
         System.arraycopy(zero, 0, initialHands[0], 0, 8);
         System.arraycopy(zero, 0, initialHands[1], 0, 8);

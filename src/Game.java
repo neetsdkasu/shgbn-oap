@@ -1,3 +1,6 @@
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 final class Game implements Board
 {
@@ -25,8 +28,21 @@ final class Game implements Board
         return currentField[row][col];
     }
 
+    static void writeTo(DataOutput out) throws IOException
+    {
+
+    }
+
+    static void readFrom(DataInput in) throws IOException
+    {
+
+    }
+
     static void copyToProblem()
     {
+        Problem.date = System.currentTimeMillis();
+        Problem.update = date;
+        Problem.recordId = 0;
         System.arraycopy(currentHands[0], 0, Problem.initialHands[0], 0, 8);
         System.arraycopy(currentHands[1], 0, Problem.initialHands[1], 0, 8);
         for (int i = 0; i < 9; i++)
@@ -57,6 +73,9 @@ final class Game implements Board
     private static final boolean[]
         danger = new boolean[2],
         checkmate = new boolean[2];
+
+    static long date = 0L, update = 0L;
+    static int recordId = 0;
 
     static int getFirstPlayer()
     {

@@ -6,6 +6,7 @@ import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Displayable;
 import javax.microedition.lcdui.TextBox;
 import javax.microedition.lcdui.TextField;
+import javax.microedition.lcdui.Ticker;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.midlet.MIDletStateChangeException;
 
@@ -29,6 +30,7 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
 
     public ShogiBanMIDlet()
     {
+        Storage.init();
         loadResources();
 
         midlet = this;
@@ -46,8 +48,14 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         Display.getDisplay(this).setCurrent(shogiBan);
     }
 
+    private void release()
+    {
+        Storage.closeAll();
+    }
+
     protected void destroyApp(boolean unconditional) throws MIDletStateChangeException
     {
+        release();
     }
 
     protected void pauseApp()
@@ -67,6 +75,7 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         }
         if (cmd == exitCommand)
         {
+            release();
 			notifyDestroyed();
         }
         else if (cmd == menuCommand)
@@ -76,12 +85,15 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         else if (cmd == saveCommand)
         {
             String title = textBox.getString();
-            if (title == null)
+            if (title != null && (title = title.trim()) != "")
             {
-                title = "";
+                shogiBan.save(title);
+                Display.getDisplay(this).setCurrent(shogiBan);
             }
-            shogiBan.save(title);
-            Display.getDisplay(this).setCurrent(shogiBan);
+            else
+            {
+                textBox.setTicker(new Ticker("empty is wrong"));
+            }
         }
         else if (cmd == cancelCommand)
         {
@@ -104,6 +116,7 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         else
         {
             textBox.setString(title);
+            textBox.setTicker(null);
         }
         Display.getDisplay(midlet).setCurrent(textBox);
     }

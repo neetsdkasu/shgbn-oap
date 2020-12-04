@@ -56,12 +56,32 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     void save(String title)
     {
+        if (title == null)
+        {
+            setTicker(new Ticker("canceled"));
+            closeMenu();
+            render();
+            return;
+        }
+        if (isGameMode())
+        {
+            Storage.saveGame(false);
+        }
+        else if (isEditMode())
+        {
+            Storage.saveProblem(false);
+        }
+        setTicker(new Ticker("saved"));
         closeMenu();
         render();
     }
 
     void menu()
     {
+        if (getTicker() != null)
+        {
+            setTicker(null);
+        }
         switch (menuMode)
         {
         case 0:
@@ -123,6 +143,16 @@ final class ShogiBan extends GameCanvas implements GConstants
         if (isGameMode())
         {
             renderGameInfo(g, headerOffsetX);
+        }
+        else if (isEditMode())
+        {
+            g.setColor(Problem.recordId == 0 ? GRAY : LINE_COLOR);
+            g.drawString(
+                Problem.getTitle(),
+                headerOffsetX,
+                0,
+                Graphics.LEFT|Graphics.TOP
+            );
         }
 
         renderCursor(g);
@@ -349,10 +379,9 @@ final class ShogiBan extends GameCanvas implements GConstants
             // TODO
             menu.setEnable(1, History.hasPrev());
             menu.setEnable(2, History.hasNext());
-            menu.setEnable(3, false);
-            menu.setEnable(4, false);
-            menu.setEnable(5, false);
-            menu.setEnable(6, false);
+            menu.setEnable(4, false); // load
+            menu.setEnable(5, false); // new
+            menu.setEnable(6, false); // change mode
             break;
         case 3:
             menu = Menu.getEditMenuOnBan().cleanUp();
@@ -368,9 +397,9 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu = Menu.getEditMenu();
             menu.setValue(Problem.getStepLimit());
             // TODO
-            menu.setEnable(2, false);
-            menu.setEnable(3, false);
-            menu.setEnable(4, false);
+            menu.setEnable(2, false); // load
+            menu.setEnable(3, false); // new
+            menu.setEnable(4, false); // change mode
             break;
         case 6:
             menu = Menu.getSaveMenu().cleanUp();
@@ -394,6 +423,10 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     protected void keyPressed(int keyCode)
     {
+        if (getTicker() != null)
+        {
+            setTicker(null);
+        }
         int action = getGameAction(keyCode);
         if (menuMode != 0)
         {
@@ -448,15 +481,32 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         switch (menu.getSelect())
         {
-        case 0:
+        case 0: // create
             ShogiBanMIDlet.showTextBox(Problem.getTitle());
             break;
-        case 2:
-            if (isEditMode())
+        case 1: // overwrite
+            if (isGameMode())
+            {
+                Storage.saveGame(true);
+            }
+            else if (isEditMode())
+            {
+                Storage.saveProblem(true);
+            }
+            setTicker(new Ticker("saved"));
+            closeMenu();
+            render();
+            break;
+        case 2: // cancel
+            if (isGameMode())
+            {
+                openMenu(2);
+            }
+            else if (isEditMode())
             {
                 openMenu(5);
-                render();
             }
+            render();
             break;
         }
     }
@@ -469,9 +519,14 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         switch (menu.getSelect())
         {
-        case 1:
+        case 1: // save
             openMenu(6);
             render();
+            break;
+        case 2: // load
+        case 3: // new
+        case 4: // change mode
+        default:
             break;
         }
     }
@@ -484,13 +539,13 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         switch (menu.getSelect())
         {
-        case 0:
+        case 0: // move
             state = 2;
             break;
-        case 1:
+        case 1: // increment
             Problem.incrementInHands(selY-9, selX);
             break;
-        case 2:
+        case 2: // decrement
             Problem.decrementInHands(selY-9, selX);
             break;
         default:
@@ -508,14 +563,14 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         switch (menu.getSelect())
         {
-        case 0:
+        case 0: // move
             state = 1;
             colorField.setCell(selX, selY, 3);
             break;
-        case 1:
+        case 1: // flip
             Problem.flip(selY, selX);
             break;
-        case 2:
+        case 2: // change owner
             Problem.changeOwner(selY, selX);
             break;
         default:
@@ -533,7 +588,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         switch (menu.getSelect())
         {
-        case 0:
+        case 0: // change range view
             rangeMode = (rangeMode + 1) % 4;
             if (state == 0)
             {
@@ -543,25 +598,31 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 showMovable(true);
             }
-            render();
             break;
-        case 1:
+        case 1: // prev 1 step
             Game.goHistoryPrev();
             menu.setEnable(1, History.hasPrev());
             menu.setEnable(2, History.hasNext());
             state = 0;
             clearMovable();
-            render();
             break;
-        case 2:
+        case 2: // next 1 step
             Game.goHistoryNext();
             menu.setEnable(1, History.hasPrev());
             menu.setEnable(2, History.hasNext());
             state = 0;
             clearMovable();
-            render();
             break;
+        case 3: // save
+            openMenu(6);
+            break;
+        case 4: // load
+        case 5: // new
+        case 6: // change mode
+        default:
+            return;
         }
+        render();
     }
 
     private void actRankUpMenu(int keyCode, int action)
@@ -633,7 +694,7 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         switch (state)
         {
-        case 0:
+        case 0: // no state
             if (curY < 9)
             {
                 if (Problem.isEmpty(curY, curX))
@@ -651,7 +712,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 openMenu(4);
             }
             return true;
-        case 1:
+        case 1: // move from Board
             if (curY < 9)
             {
                 Problem.move(selY, selX, curY, curX);
@@ -663,7 +724,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             state = 0;
             colorField.setCell(selX, selY, 0);
             return true;
-        case 2:
+        case 2: // move from Hands
             if (curY < 9)
             {
                 Problem.put(selY - 9, selX, curY, curX);
@@ -794,8 +855,8 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         switch (state)
         {
-        case 0:
-        case 4:
+        case 0: // no state
+        case 4: // reset state
             if (curY >= 9)
             {
                 if (Game.selectHand(curY - 9, curX))
@@ -839,7 +900,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 state = 0;
             }
             return true;
-        case 1:
+        case 1: // move from Board
             if (Game.canMoveTo(curY, curX))
             {
                 if (Game.canRankUp(selY, selX, curY))
@@ -864,7 +925,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 return firePlayeMode();
             }
             break;
-        case 3:
+        case 3: // move from Hands
             if (curY >= 9 || !Game.isEmpty(curY, curX))
             {
                 state = 4;
