@@ -100,9 +100,9 @@ final class Menu implements GConstants
 
         return saveMenu;
     }
-    
+
     private static Menu listProblemMenu = null;
-    
+
     static Menu getListProblemMenu()
     {
         String[] list = Storage.listUpProblem();
@@ -120,26 +120,45 @@ final class Menu implements GConstants
         listProblemMenu.setCancelItem(items.length-1);
         return listProblemMenu;
     }
-    
+
     private static Menu loadProblemMenu = null;
-    
+
     static Menu getLoadProblemMenu()
     {
         if (loadProblemMenu == null)
         {
             loadProblemMenu = new Menu(8, new String[]{
-                "", 
+                "",
                 WORDS[25], // load
                 WORDS[27], // delete
-                WORDS[8]   // cancel                
+                WORDS[8]   // cancel
             });
             loadProblemMenu.setEnable(0, false);
             loadProblemMenu.setCancelItem(3);
         }
-        
+
         loadProblemMenu.setText(0, listProblemMenu.getText());
-        
+
         return loadProblemMenu;
+    }
+
+    private static Menu newProblemMenu = null;
+
+    static Menu getNewProblemMenu()
+    {
+        if (newProblemMenu == null)
+        {
+            newProblemMenu = new Menu(9, new String[]{
+                WORDS[29],
+                WORDS[28],
+                WORDS[30],
+                WORDS[31],
+                WORDS[8]
+            });
+            newProblemMenu.setCancelItem(4);
+        }
+
+        return newProblemMenu;
     }
 
     private static final int
@@ -194,27 +213,27 @@ final class Menu implements GConstants
     {
         return value;
     }
-    
+
     String getText()
     {
         return text[sel];
     }
-    
+
     String getText(int i)
     {
         return text[i];
     }
-    
+
     void setCancelItem(int i)
     {
         cancel = i;
     }
-    
+
     boolean canceled()
     {
         return cancel == sel;
     }
-    
+
     void setText(int pos, String t)
     {
         text[pos] = t;

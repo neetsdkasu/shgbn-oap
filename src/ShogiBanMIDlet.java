@@ -198,5 +198,10 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         resWords[26] = resChars[50] + resChars[51]
                      + resChars[74] + resChars[75] + resChars[76]; // save HO-ZON-MEI-SHI-TEI
         resWords[27] = resChars[77] + resChars[78]; // delete SAKU-JO
+        resWords[28] = resChars[79] + resChars[80] + resChars[81]; // HON-SHOU-GI
+        resWords[29] = resChars[25] + resChars[80] + resChars[81]; // TUME-SHOU-GI
+        resWords[30] = resChars[70] + resChars[71] + resChars[82]; // playing-game SHI-KOU-CHU
+        resWords[31] = resChars[50] + resChars[51]
+                     + resChars[70] + resChars[71]; // saved-game HO-ZON-SHI-KOU
     }
 }

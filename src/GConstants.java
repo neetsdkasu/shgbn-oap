@@ -18,8 +18,8 @@ interface GConstants
         DISP_H = 268;
 
     String[]
-        CHARS = new String[90],
-        WORDS = new String[30];
+        CHARS = new String[100],
+        WORDS = new String[40];
 
     Font
         SMALL_FONT = Font.getFont(

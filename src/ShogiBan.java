@@ -406,7 +406,6 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu.setValue(Problem.getStepLimit());
             menu.setEnable(2, Storage.hasProblem()); // load
             // TODO
-            menu.setEnable(3, false); // new
             menu.setEnable(4, false); // change mode
             break;
         case 6:
@@ -425,6 +424,12 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 8:
             menu = Menu.getLoadProblemMenu().cleanUp();
+            break;
+        case 9:
+            menu = Menu.getNewProblemMenu().cleanUp();
+            // TODO
+            menu.setEnable(2, false);
+            menu.setEnable(3, false);
             break;
         }
     }
@@ -496,6 +501,42 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 8:
             actLoadProblemMenu(keyCode, action);
             break;
+        case 9:
+            actNewProblemMenu(keyCode, action);
+            break;
+        }
+    }
+
+    private void actNewProblemMenu(int keyCode, int action)
+    {
+        if (action != Canvas.FIRE)
+        {
+            return;
+        }
+        if (menu.canceled())
+        {
+            openMenu(5);
+            render();
+            return;
+        }
+        switch (menu.getSelect())
+        {
+        case 0: // TSUME-SHOU-GI
+            state = 0;
+            Problem.setPuzzleTemplate();
+            closeMenu();
+            render();
+            break;
+        case 1: // HON-SHOU-GI
+            state = 0;
+            Problem.setNormalGame();
+            closeMenu();
+            render();
+            break;
+        case 2: // playing-game SHI-KOU-CHU
+        case 3: // saved-game HO-ZON-SHI-KOU
+        default:
+            return;
         }
     }
 
@@ -593,17 +634,18 @@ final class ShogiBan extends GameCanvas implements GConstants
         {
         case 1: // save
             openMenu(6);
-            render();
             break;
         case 2: // load
             openMenu(7);
-            render();
             break;
         case 3: // new
+            openMenu(9);
+            break;
         case 4: // change mode
         default:
-            break;
+            return;
         }
+        render();
     }
 
     private void actEditMenuOnHand(int keyCode, int action)
