@@ -425,8 +425,6 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 8:
             menu = Menu.getLoadProblemMenu().cleanUp();
-            // TODO
-            menu.setEnable(2, false); // delete
             break;
         }
     }
@@ -507,15 +505,17 @@ final class ShogiBan extends GameCanvas implements GConstants
         {
             return;
         }
+        int sel = Menu.getListProblemMenu().getSelect();
         switch (menu.getSelect())
         {
         case 1: // load
-            int sel = Menu.getListProblemMenu().getSelect();
             Storage.loadProblem(sel);
             closeMenu();
             break;
         case 2: // delete
-            // TODO
+            Storage.deleteProblem(sel);
+            closeMenu();
+            setTicker(new Ticker("deleted"));
             break;
         case 3: // cancel
             openMenu(7);

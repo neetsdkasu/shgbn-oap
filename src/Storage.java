@@ -126,6 +126,20 @@ final class Storage
         }
     }
 
+    static void deleteProblem(int sel)
+    {
+        try
+        {
+            int id = problemIDs[sel];
+            problemRS.deleteRecord(id);
+            updatedProblemList = true;
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+    }
+
     static void loadProblem(int sel)
     {
         try
