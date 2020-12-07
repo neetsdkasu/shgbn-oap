@@ -103,6 +103,9 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 2:
         case 5:
+        case 6:
+        case 7:
+        case 8:
             closeMenu();
             render();
             break;
@@ -408,8 +411,14 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 6:
             menu = Menu.getSaveMenu().cleanUp();
-            // TODO
-            menu.setEnable(1, false);
+            if (isGameMode())
+            {
+                menu.setEnable(1, Game.recordID > 0); // overwrite
+            }
+            else if (isEditMode())
+            {
+                menu.setEnable(1, Problem.recordID > 0); // overwrite
+            }
             break;
         case 7:
             menu = Menu.getListProblemMenu();
