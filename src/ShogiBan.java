@@ -24,7 +24,7 @@ final class ShogiBan extends GameCanvas implements GConstants
     private static Sprite komaStamp, modeMark;
     private static TiledLayer komaField, colorField;
 
-    private static int mode = 1;
+    private static int mode = 0;
     private static int state = 0;
     private static int menuMode = 0;
 
@@ -39,8 +39,11 @@ final class ShogiBan extends GameCanvas implements GConstants
         super(false);
         makeStaticImages();
 
-        Problem.setPuzzleTemplate();
-        board = Problem.getInstance();
+        // Problem.setPuzzleTemplate();
+        // board = Problem.getInstance();
+        Problem.setNormalGame();
+        Game.init();
+        board = Game.getInstance();
         clearMovable();
     }
 

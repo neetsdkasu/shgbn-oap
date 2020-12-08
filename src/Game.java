@@ -651,12 +651,23 @@ final class Game implements Board
             if (danger[i])
             {
                 checkmate[i] = calcCheckmate(i);
+                if (checkmate[i])
+                {
+                    for (int row = 0; row < 9; row++)
+                    {
+                        for (int col = 0; col < 9; col++)
+                        {
+                            dangerZone[i][row][col] = false;
+                        }
+                    }
+                }
             }
         }
     }
 
     private static boolean calcCheckmate(int player)
     {
+        boolean safe = false;
         for (int row = 0; row < 9; row++)
         {
             for (int col = 0; col < 9; col++)
@@ -666,11 +677,31 @@ final class Game implements Board
                     continue;
                 }
                 select(row, col);
-                if (hasAnyMovable())
+                switch (kind(row, col))
                 {
-                    return false;
+                case GYOKU:
+                case OU:
+                    if (hasAnyMovable())
+                    {
+                        return false;
+                    }
+                    if (range[1^player][row][col] >= 2)
+                    {
+                        return true;
+                    }
+                    break;
+                default:
+                    if (hasAnyMovable())
+                    {
+                        safe = true;
+                    }
+                    break;
                 }
             }
+        }
+        if (safe)
+        {
+            return false;
         }
         for (int k = 0; k < 8; k++)
         {
