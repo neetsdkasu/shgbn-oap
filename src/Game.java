@@ -30,12 +30,62 @@ final class Game implements Board
 
     static void writeTo(DataOutput out) throws IOException
     {
+        out.writeInt(recordID);
+        out.writeLong(date);
+        out.writeLong(update);
+        out.writeUTF(title);
 
+        Problem.writeTo(out);
+
+        out.writeInt(firstPlayer);
+        out.writeInt(currentPlayer);
+        out.writeInt(currentStep);
+        for (int i = 0; i < 2; i++)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                out.writeByte(currentHands[i][k]);
+            }
+        }
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                out.writeByte(currentField[row][col]);
+            }
+        }
+
+        History.writeTo(out);
     }
 
     static void readFrom(DataInput in) throws IOException
     {
+        recordID = in.readInt();
+        date = in.readLong();
+        update = in.readLong();
+        title = in.readUTF();
 
+        Problem.readFrom(in);
+
+        firstPlayer = in.readInt();
+        currentPlayer = in.readInt();
+        currentStep = in.readInt();
+        for (int i = 0; i < 2; i++)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                currentHands[i][k] = in.readUnsignedByte();
+            }
+        }
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                currentField[row][col] = in.readUnsignedByte();
+            }
+        }
+
+        History.readFrom(in);
     }
 
     static void copyToProblem()
@@ -235,12 +285,17 @@ final class Game implements Board
         {
             System.arraycopy(Problem.initialField[i], 0, currentField[i], 0, 9);
         }
+        ready();
+        History.clear();
+    }
+
+    static void ready()
+    {
         clearRange();
         calcRange();
         clearOute();
         checkOute();
         clearMovable();
-        History.clear();
     }
 
     static boolean put(int kind, int row, int col)
@@ -466,12 +521,7 @@ final class Game implements Board
         }
 
         History.movePrev();
-
-        clearRange();
-        calcRange();
-        clearOute();
-        checkOute();
-        clearMovable();
+        ready();
     }
 
     static void goHistoryNext()
@@ -503,11 +553,7 @@ final class Game implements Board
 
         currentStep++;
         currentPlayer ^= 1;
-        clearRange();
-        calcRange();
-        clearOute();
-        checkOute();
-        clearMovable();
+        ready();
     }
 
     private static boolean canGoTo(int row, int col, int dr, int dc)
@@ -520,11 +566,7 @@ final class Game implements Board
     {
         currentStep++;
         currentPlayer ^= 1;
-        clearRange();
-        calcRange();
-        clearOute();
-        checkOute();
-        clearMovable();
+        ready();
     }
 
     private static boolean addRange(int player, int row, int col)

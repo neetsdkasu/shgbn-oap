@@ -5,28 +5,31 @@ final class Storage
 {
     private static RecordStore
         stateRS = null,
-        tempPlayRS = null,
+        tempGameRS = null,
         tempProblemRS = null,
-        playRS = null,
+        gameRS = null,
         problemRS = null;
 
     private static boolean
-        updatedProblemList = false;
+        updatedProblemList = false,
+        updatedGameList = false;
 
     private static int[]
-        problemIDs = null;
+        problemIDs = null,
+        gameIDs = null;
 
     private static String[]
-        problemTitles = null;
+        problemTitles = null,
+        gameTitles = null;
 
     static void init()
     {
         try
         {
             stateRS = RecordStore.openRecordStore("shgbn.state", true);
-            tempPlayRS = RecordStore.openRecordStore("shgbn.temp.play", true);
+            tempGameRS = RecordStore.openRecordStore("shgbn.temp.game", true);
             tempProblemRS = RecordStore.openRecordStore("shgbn.temp.problem", true);
-            playRS = RecordStore.openRecordStore("shgbn.play", true);
+            gameRS = RecordStore.openRecordStore("shgbn.game", true);
             problemRS = RecordStore.openRecordStore("shgbn.problem", true);
         }
         catch (RecordStoreException ex)
@@ -39,9 +42,9 @@ final class Storage
     static void closeAll()
     {
         stateRS = close(stateRS);
-        tempPlayRS = close(tempPlayRS);
+        tempGameRS = close(tempGameRS);
         tempProblemRS = close(tempProblemRS);
-        playRS = close(playRS);
+        gameRS = close(gameRS);
         problemRS = close(problemRS);
     }
 
@@ -61,6 +64,30 @@ final class Storage
         return null;
     }
 
+    static boolean hasGame()
+    {
+        try
+        {
+            return gameRS.getNumRecords() > 0;
+        }
+        catch (RecordStoreException _)
+        {
+            return false;
+        }
+    }
+
+    static boolean hasGame(int id)
+    {
+        try
+        {
+            return id > 0 && gameRS.getRecordSize(id) > 0;
+        }
+        catch (RecordStoreException _)
+        {
+            return false;
+        }
+    }
+
     static boolean hasProblem()
     {
         try
@@ -70,6 +97,79 @@ final class Storage
         catch (RecordStoreException _)
         {
             return false;
+        }
+    }
+
+    static boolean hasProblem(int id)
+    {
+        try
+        {
+            return id > 0 && problemRS.getRecordSize(id) > 0;
+        }
+        catch (RecordStoreException _)
+        {
+            return false;
+        }
+    }
+
+    static String[] listUpGame()
+    {
+        if (gameTitles != null && !updatedGameList)
+        {
+            return gameTitles;
+        }
+        RecordEnumeration re = null;
+        try
+        {
+            int n = gameRS.getNumRecords();
+            if (gameIDs == null || gameIDs.length != n)
+            {
+                gameIDs = new int[n];
+                gameTitles = new String[n];
+            }
+
+            re = gameRS.enumerateRecords(null, null, false);
+            int i = 0;
+            while (re.hasNextElement())
+            {
+                byte[] data = re.nextRecord();
+                ByteArrayInputStream bais = new ByteArrayInputStream(data);
+                DataInputStream dis = new DataInputStream(bais);
+                gameIDs[i] = dis.readInt(); // Game.recordID
+                dis.readLong(); // Game.date
+                dis.readLong(); // Game.update
+                gameTitles[i] = dis.readUTF(); // Game.title
+                dis.readInt(); // Problem.recordID
+                dis.readLong(); // Problem.date
+                dis.readLong(); // Problem.update
+                String pTitle = dis.readUTF(); // Problem.title
+                if (gameTitles[i] == null || gameTitles[i].length() == 0)
+                {
+                    gameTitles[i] = pTitle;
+                }
+                int stepLimit = dis.readInt(); // Problem.stepLimit
+                if (stepLimit > 0)
+                {
+                    gameTitles[i] = Integer.toString(stepLimit)
+                                     + GConstants.WORDS[2]
+                                     + " "
+                                     + gameTitles[i];
+                }
+                i++;
+            }
+            updatedGameList = false;
+            return gameTitles;
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+        finally
+        {
+            if (re != null)
+            {
+                re.destroy();
+            }
         }
     }
 
@@ -96,11 +196,11 @@ final class Storage
                 byte[] data = re.nextRecord();
                 ByteArrayInputStream bais = new ByteArrayInputStream(data);
                 DataInputStream dis = new DataInputStream(bais);
-                problemIDs[i] = dis.readInt();
-                dis.readLong();
-                dis.readLong();
-                problemTitles[i] = dis.readUTF();
-                int stepLimit = dis.readInt();
+                problemIDs[i] = dis.readInt(); // Problem.recordID
+                dis.readLong(); // Problem.date
+                dis.readLong(); // Problem.update
+                problemTitles[i] = dis.readUTF(); // Problem.title
+                int stepLimit = dis.readInt(); // Problem.stepLimit
                 if (stepLimit > 0)
                 {
                     problemTitles[i] = Integer.toString(stepLimit)
@@ -126,6 +226,20 @@ final class Storage
         }
     }
 
+    static void deleteGame(int sel)
+    {
+        try
+        {
+            int id = gameIDs[sel];
+            gameRS.deleteRecord(id);
+            updatedGameList = true;
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+    }
+
     static void deleteProblem(int sel)
     {
         try
@@ -133,6 +247,22 @@ final class Storage
             int id = problemIDs[sel];
             problemRS.deleteRecord(id);
             updatedProblemList = true;
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+    }
+
+    static void loadGame(int sel)
+    {
+        try
+        {
+            int id = gameIDs[sel];
+            byte[] data = gameRS.getRecord(id);
+            ByteArrayInputStream bais = new ByteArrayInputStream(data);
+            DataInputStream dis = new DataInputStream(bais);
+            Game.readFrom(dis);
         }
         catch (Exception ex)
         {
@@ -210,7 +340,7 @@ final class Storage
             Game.update = System.currentTimeMillis();
             if (!overwrite)
             {
-                Game.recordID = playRS.getNextRecordID();
+                Game.recordID = gameRS.getNextRecordID();
             }
             baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
@@ -220,11 +350,11 @@ final class Storage
             if (overwrite)
             {
                 int id = Game.recordID;
-                playRS.setRecord(id, data, 0, data.length);
+                gameRS.setRecord(id, data, 0, data.length);
             }
             else
             {
-                playRS.addRecord(data, 0, data.length);
+                gameRS.addRecord(data, 0, data.length);
             }
         }
         catch (Exception ex)

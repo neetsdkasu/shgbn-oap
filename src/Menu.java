@@ -161,6 +161,47 @@ final class Menu implements GConstants
         return newProblemMenu;
     }
 
+    private static Menu listGameMenu = null;
+
+    static Menu getListGameMenu()
+    {
+        String[] list = Storage.listUpGame();
+        if (listGameMenu != null)
+        {
+            if (list[0] == listGameMenu.text[0])
+            {
+                return listGameMenu;
+            }
+        }
+        String[] items = new String[list.length + 1];
+        System.arraycopy(list, 0, items, 0, list.length);
+        items[items.length-1] = WORDS[8];
+        listGameMenu = new Menu(10, items);
+        listGameMenu.setCancelItem(items.length-1);
+        return listGameMenu;
+    }
+
+    private static Menu loadGameMenu = null;
+
+    static Menu getLoadGameMenu()
+    {
+        if (loadGameMenu == null)
+        {
+            loadGameMenu = new Menu(11, new String[]{
+                "",
+                WORDS[25], // load
+                WORDS[27], // delete
+                WORDS[8]   // cancel
+            });
+            loadGameMenu.setEnable(0, false);
+            loadGameMenu.setCancelItem(3);
+        }
+
+        loadGameMenu.setText(0, listGameMenu.getText());
+
+        return loadGameMenu;
+    }
+
     private static final int
         BACKGROUND_COLOR = 0xE0E0E0;
 

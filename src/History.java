@@ -20,12 +20,27 @@ final class History
 
     static void writeTo(DataOutput out) throws IOException
     {
-
+        out.writeInt(insertPos);
+        out.writeInt(count);
+        for (int i = 0; i < count; i++)
+        {
+            int hi = getHi(i);
+            int lo = getLo(i);
+            out.writeInt(history[hi][lo]);
+        }
     }
 
     static void readFrom(DataInput in) throws IOException
     {
-
+        insertPos = in.readInt();
+        count = in.readInt();
+        for (int i = 0; i < count; i++)
+        {
+            int hi = getHi(i);
+            int lo = getLo(i);
+            grow(hi, lo);
+            history[hi][lo] = in.readInt();
+        }
     }
 
     static int getCount()
@@ -145,21 +160,11 @@ final class History
     {
         add(9, 0, toRow, toCol, fromKoma, 0, false);
     }
-
     static void add(int fromRow, int fromCol, int toRow, int toCol, int fromKoma, int toKoma, boolean rankUp)
     {
         int hi = getHi(insertPos);
         int lo = getLo(insertPos);
-        if (hi >= history.length)
-        {
-            int[][] tmp = new int[history.length+2][];
-            System.arraycopy(history, 0, tmp, 0, history.length);
-            history = tmp;
-        }
-        if (history[hi] == null)
-        {
-            history[hi] = new int[S];
-        }
+        grow(hi, lo);
         history[hi][lo] = (fromRow * 9 + fromCol)
                         | ((toRow * 9 + toCol) << 7)
                         | (fromKoma << 14)
@@ -182,5 +187,19 @@ final class History
     private static int getLo(int x)
     {
         return x % S;
+    }
+
+    private static void grow(int hi, int lo)
+    {
+        if (hi >= history.length)
+        {
+            int[][] tmp = new int[history.length+2][];
+            System.arraycopy(history, 0, tmp, 0, history.length);
+            history = tmp;
+        }
+        if (history[hi] == null)
+        {
+            history[hi] = new int[S];
+        }
     }
 }
