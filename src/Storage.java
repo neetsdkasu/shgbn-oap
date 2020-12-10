@@ -112,6 +112,63 @@ final class Storage
         }
     }
 
+    static void loadAppState()
+    {
+        try
+        {
+            if (stateRS.getNumRecords() > 0)
+            {
+                byte[] data = stateRS.getRecord(1);
+                ByteArrayInputStream bais = new ByteArrayInputStream(data);
+                DataInputStream dis = new DataInputStream(bais);
+                ShogiBan.readFrom(dis);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+    }
+
+    static void saveAppState()
+    {
+        ByteArrayOutputStream baos = null;
+        try
+        {
+            baos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(baos);
+            ShogiBan.writeTo(dos);
+            dos.flush();
+            byte[] data = baos.toByteArray();
+            if (stateRS.getNumRecords() > 0)
+            {
+                stateRS.setRecord(1, data, 0, data.length);
+            }
+            else
+            {
+                stateRS.addRecord(data, 0, data.length);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+        finally
+        {
+            if (baos != null)
+            {
+                try
+                {
+                    baos.close();
+                }
+                catch (Exception __)
+                {
+                    // do nothing
+                }
+            }
+        }
+    }
+
     static String[] listUpGame()
     {
         if (gameTitles != null && !updatedGameList)
@@ -270,6 +327,31 @@ final class Storage
         }
     }
 
+    static void loadTemporaryGame()
+    {
+        try
+        {
+            if (tempGameRS.getNumRecords() > 0)
+            {
+                byte[] data = tempGameRS.getRecord(1);
+                ByteArrayInputStream bais = new ByteArrayInputStream(data);
+                DataInputStream dis = new DataInputStream(bais);
+                Game.readFrom(dis);
+                Game.ready();
+            }
+            else
+            {
+                Game.clear();
+                Problem.setNormalGame();
+                Game.initPlay();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+    }
+
     static void loadProblem(int sel)
     {
         try
@@ -279,6 +361,28 @@ final class Storage
             ByteArrayInputStream bais = new ByteArrayInputStream(data);
             DataInputStream dis = new DataInputStream(bais);
             Problem.readFrom(dis);
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+    }
+
+    static void loadTemporaryProblem()
+    {
+        try
+        {
+            if (tempProblemRS.getNumRecords() > 0)
+            {
+                byte[] data = tempProblemRS.getRecord(1);
+                ByteArrayInputStream bais = new ByteArrayInputStream(data);
+                DataInputStream dis = new DataInputStream(bais);
+                Problem.readFrom(dis);
+            }
+            else
+            {
+                Problem.setPuzzleTemplate();
+            }
         }
         catch (Exception ex)
         {
@@ -332,6 +436,45 @@ final class Storage
         }
     }
 
+    static void saveTemporaryProblem()
+    {
+        ByteArrayOutputStream baos = null;
+        try
+        {
+            baos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(baos);
+            Problem.writeTo(dos);
+            dos.flush();
+            byte[] data = baos.toByteArray();
+            if (tempProblemRS.getNumRecords() > 0)
+            {
+                tempProblemRS.setRecord(1, data, 0, data.length);
+            }
+            else
+            {
+                tempProblemRS.addRecord(data, 0, data.length);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+        finally
+        {
+            if (baos != null)
+            {
+                try
+                {
+                    baos.close();
+                }
+                catch (Exception __)
+                {
+                    // do nothing
+                }
+            }
+        }
+    }
+
     static void saveGame(boolean overwrite)
     {
         ByteArrayOutputStream baos = null;
@@ -355,6 +498,46 @@ final class Storage
             else
             {
                 gameRS.addRecord(data, 0, data.length);
+            }
+            updatedGameList = true;
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+        finally
+        {
+            if (baos != null)
+            {
+                try
+                {
+                    baos.close();
+                }
+                catch (Exception __)
+                {
+                    // do nothing
+                }
+            }
+        }
+    }
+
+    static void saveTemporaryGame()
+    {
+        ByteArrayOutputStream baos = null;
+        try
+        {
+            baos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(baos);
+            Game.writeTo(dos);
+            dos.flush();
+            byte[] data = baos.toByteArray();
+            if (tempGameRS.getNumRecords() > 0)
+            {
+                tempGameRS.setRecord(1, data, 0, data.length);
+            }
+            else
+            {
+                tempGameRS.addRecord(data, 0, data.length);
             }
         }
         catch (Exception ex)

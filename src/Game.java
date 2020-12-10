@@ -133,6 +133,11 @@ final class Game implements Board
         return firstPlayer;
     }
 
+    static void setFirstPlayer(int p)
+    {
+        firstPlayer = p;
+    }
+
     static int getCurrentPlayer()
     {
         return currentPlayer;
@@ -275,7 +280,7 @@ final class Game implements Board
         return movable[row][col];
     }
 
-    static void init()
+    static void initPlay()
     {
         currentStep = 0;
         currentPlayer = firstPlayer;
@@ -287,6 +292,15 @@ final class Game implements Board
         }
         ready();
         History.clear();
+    }
+    
+    static void clear()
+    {
+        firstPlayer = 0;
+        title = "";
+        recordID = 0;
+        date = System.currentTimeMillis();
+        update = date;
     }
 
     static void ready()

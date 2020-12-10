@@ -1,3 +1,6 @@
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import javax.microedition.lcdui.*;
 import javax.microedition.lcdui.game.*;
 
@@ -39,20 +42,45 @@ final class ShogiBan extends GameCanvas implements GConstants
         super(false);
         makeStaticImages();
 
-        // Problem.setPuzzleTemplate();
-        // board = Problem.getInstance();
-        Problem.setNormalGame();
-        Game.init();
-        board = Game.getInstance();
-        clearMovable();
+        Storage.loadAppState();
+
+        if (isGameMode())
+        {
+            Storage.loadTemporaryGame();
+            board = Game.getInstance();
+            clearMovable();
+        }
+        else if (isEditMode())
+        {
+            Storage.loadTemporaryProblem();
+            board = Problem.getInstance();
+        }
     }
 
-    boolean isGameMode()
+    static void writeTo(DataOutput out) throws IOException
+    {
+        out.writeInt(1); // version
+        out.writeInt(mode);
+        out.writeInt(rangeMode);
+        out.writeInt(curX);
+        out.writeInt(curY);
+    }
+
+    static void readFrom(DataInput in) throws IOException
+    {
+        in.readInt();
+        mode = in.readInt();
+        rangeMode = in.readInt();
+        curX = in.readInt();
+        curY = in.readInt();
+    }
+
+    static boolean isGameMode()
     {
         return mode == 0;
     }
 
-    boolean isEditMode()
+    static boolean isEditMode()
     {
         return mode == 1;
     }
@@ -395,7 +423,6 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu.setEnable(4, Storage.hasGame()); // load
             // TODO
             menu.setEnable(5, false); // new
-            menu.setEnable(6, false); // change mode
             break;
         case 3:
             menu = Menu.getEditMenuOnBan().cleanUp();
@@ -411,8 +438,6 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu = Menu.getEditMenu();
             menu.setValue(Problem.getStepLimit());
             menu.setEnable(2, Storage.hasProblem()); // load
-            // TODO
-            menu.setEnable(4, false); // change mode
             break;
         case 6:
             menu = Menu.getSaveMenu().cleanUp();
@@ -718,6 +743,14 @@ final class ShogiBan extends GameCanvas implements GConstants
             openMenu(9);
             break;
         case 4: // change mode
+            mode = 0;
+            state = 0;
+            Storage.saveTemporaryProblem();
+            Storage.loadTemporaryGame();
+            board = Game.getInstance();
+            clearMovable();
+            closeMenu();
+            break;
         default:
             return;
         }
@@ -813,7 +846,16 @@ final class ShogiBan extends GameCanvas implements GConstants
             openMenu(10);
             break;
         case 5: // new
+            return;
         case 6: // change mode
+            mode = 1;
+            state = 0;
+            Storage.saveTemporaryGame();
+            Storage.loadTemporaryProblem();
+            board = Problem.getInstance();
+            clearMovable();
+            closeMenu();
+            break;
         default:
             return;
         }
@@ -988,7 +1030,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void clearMovable()
     {
-        if (rangeMode == 0)
+        if (rangeMode == 0 || isEditMode())
         {
             colorField.fillCells(0, 0, 9, 9, 0);
             return;
@@ -1068,20 +1110,18 @@ final class ShogiBan extends GameCanvas implements GConstants
                 if (state == 4)
                 {
                     state = 0;
-                    clearMovable();
-                    return true;
                 }
-                return false;
+                clearMovable();
+                return true;
             }
             if (!Game.select(curY, curX))
             {
                 if (state == 4)
                 {
                     state = 0;
-                    clearMovable();
-                    return true;
                 }
-                return false;
+                clearMovable();
+                return true;
             }
             showMovable(Game.isCurrentPlayer(curY, curX));
             if (Game.isCurrentPlayer(curY, curX))
@@ -1114,7 +1154,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                     return true;
                 }
             }
-            else if (curY >= 9 || !Game.isEmpty(curY, curX))
+            else
             {
                 state = 4;
                 return firePlayeMode();

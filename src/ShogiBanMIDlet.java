@@ -50,6 +50,15 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
 
     private void release()
     {
+        Storage.saveAppState();
+        if (ShogiBan.isGameMode())
+        {
+            Storage.saveTemporaryGame();
+        }
+        else if (ShogiBan.isEditMode())
+        {
+            Storage.saveTemporaryProblem();
+        }
         Storage.closeAll();
     }
 
