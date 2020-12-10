@@ -93,6 +93,10 @@ final class Game implements Board
         Problem.date = System.currentTimeMillis();
         Problem.update = date;
         Problem.recordID = 0;
+        if (!getTitle().equals(Problem.getTitle()))
+        {
+            Problem.setTitle(title);
+        }
         System.arraycopy(currentHands[0], 0, Problem.initialHands[0], 0, 8);
         System.arraycopy(currentHands[1], 0, Problem.initialHands[1], 0, 8);
         for (int i = 0; i < 9; i++)
