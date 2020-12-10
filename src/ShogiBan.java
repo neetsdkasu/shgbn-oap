@@ -479,7 +479,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     protected void keyRepeated(int keyCode)
     {
-        if (getGameAction(keyCode) != Canvas.FIRE)
+        if (getGameAction(keyCode) != FIRE)
         {
             keyPressed(keyCode);
         }
@@ -557,7 +557,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actNewGameMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -590,7 +590,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actLoadGameMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -621,7 +621,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actListGameMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -658,7 +658,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actNewProblemMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -695,7 +695,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actLoadProblemMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -721,7 +721,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actListProblemMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -742,7 +742,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actSaveMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -787,7 +787,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actEditMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -819,7 +819,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actEditMenuOnHand(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -843,7 +843,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actEditMenuOnBan(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -868,7 +868,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actGameMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -925,7 +925,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actRankUpMenu(int keyCode, int action)
     {
-        if (action != Canvas.FIRE)
+        if (action != FIRE)
         {
             return;
         }
@@ -942,21 +942,21 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         switch (action)
         {
-        case Canvas.UP:
+        case UP:
             curY = (curY + 10) % 11;
             if (curY == 10 && curX == 8)
             {
                 curX = 7;
             }
             break;
-        case Canvas.DOWN:
+        case DOWN:
             curY = (curY + 1) % 11;
             if (curY == 9 && curX == 8)
             {
                 curX = 7;
             }
             break;
-        case Canvas.LEFT:
+        case LEFT:
             if (curY < 9)
             {
                 curX = (curX + 8) % 9;
@@ -966,7 +966,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 curX = (curX + 7) % 8;
             }
             break;
-        case Canvas.RIGHT:
+        case RIGHT:
             if (curY < 9)
             {
                 curX = (curX + 1) % 9;
@@ -976,7 +976,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 curX = (curX + 1) % 8;
             }
             break;
-        case Canvas.FIRE:
+        case FIRE:
             if (!fireEditMode())
             {
                 return;
@@ -1043,21 +1043,21 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         switch (action)
         {
-        case Canvas.UP:
+        case UP:
             curY = (curY + 10) % 11;
             if (curY == 10 && curX == 8)
             {
                 curX = 7;
             }
             break;
-        case Canvas.DOWN:
+        case DOWN:
             curY = (curY + 1) % 11;
             if (curY == 9 && curX == 8)
             {
                 curX = 7;
             }
             break;
-        case Canvas.LEFT:
+        case LEFT:
             if (curY < 9)
             {
                 curX = (curX + 8) % 9;
@@ -1067,7 +1067,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 curX = (curX + 7) % 8;
             }
             break;
-        case Canvas.RIGHT:
+        case RIGHT:
             if (curY < 9)
             {
                 curX = (curX + 1) % 9;
@@ -1077,7 +1077,7 @@ final class ShogiBan extends GameCanvas implements GConstants
                 curX = (curX + 1) % 8;
             }
             break;
-        case Canvas.FIRE:
+        case FIRE:
             if (!firePlayeMode())
             {
                 return;
