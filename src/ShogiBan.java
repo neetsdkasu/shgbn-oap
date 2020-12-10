@@ -1484,8 +1484,8 @@ final class ShogiBan extends GameCanvas implements GConstants
         // mode mark
         {
             int w = Math.max(
-                SMALL_FONT.stringWidth("PLAY"),
-                SMALL_FONT.stringWidth("EDIT")
+                SMALL_FONT.stringWidth(WORDS[34] + "[]"),
+                SMALL_FONT.stringWidth(WORDS[33] + "[]")
             );
 
             Image img = Image.createImage(w, SMALL_FONT.getHeight()*2);
@@ -1496,12 +1496,12 @@ final class ShogiBan extends GameCanvas implements GConstants
             g.setColor(GREEN);
             g.fillRect(0, 0, img.getWidth(), img.getHeight()/2);
             g.setColor(DARK_GREEN);
-            g.drawString("PLAY", img.getWidth()/2, 0, Graphics.HCENTER|Graphics.TOP);
+            g.drawString(WORDS[34], img.getWidth()/2, 0, Graphics.HCENTER|Graphics.TOP);
 
             g.setColor(MAGENTA);
             g.fillRect(0, img.getHeight()/2, img.getWidth(), img.getHeight()/2);
             g.setColor(DARK_MAGENTA);
-            g.drawString("EDIT", img.getWidth()/2, img.getHeight()/2, Graphics.HCENTER|Graphics.TOP);
+            g.drawString(WORDS[33], img.getWidth()/2, img.getHeight()/2, Graphics.HCENTER|Graphics.TOP);
 
             img = Image.createImage(img);
             modeMark = new Sprite(img, img.getWidth(), img.getHeight()/2);
