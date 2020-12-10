@@ -202,6 +202,28 @@ final class Menu implements GConstants
         return loadGameMenu;
     }
 
+    private static Menu newGameMenu = null;
+
+    static Menu getNewGameMenu()
+    {
+        String[] list = Storage.listUpProblem();
+        if (newGameMenu != null)
+        {
+            if (list[0] == newGameMenu.text[2])
+            {
+                return newGameMenu;
+            }
+        }
+        String[] items = new String[list.length + 3];
+        System.arraycopy(list, 0, items, 2, list.length);
+        items[0] = WORDS[28];
+        items[1] = WORDS[32];
+        items[items.length-1] = WORDS[8];
+        newGameMenu = new Menu(12, items);
+        newGameMenu.setCancelItem(items.length-1);
+        return newGameMenu;
+    }
+
     private static final int
         BACKGROUND_COLOR = 0xE0E0E0;
 

@@ -68,7 +68,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     static void readFrom(DataInput in) throws IOException
     {
-        in.readInt();
+        in.readInt(); // version
         mode = in.readInt();
         rangeMode = in.readInt();
         curX = in.readInt();
@@ -140,6 +140,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 9:
         case 10:
         case 11:
+        case 12:
             closeMenu();
             render();
             break;
@@ -421,8 +422,6 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu.setEnable(1, History.hasPrev());
             menu.setEnable(2, History.hasNext());
             menu.setEnable(4, Storage.hasGame()); // load
-            // TODO
-            menu.setEnable(5, false); // new
             break;
         case 3:
             menu = Menu.getEditMenuOnBan().cleanUp();
@@ -467,6 +466,9 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 11:
             menu = Menu.getLoadGameMenu().cleanUp();
+            break;
+        case 12:
+            menu = Menu.getNewGameMenu();
             break;
         }
     }
@@ -550,9 +552,44 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 11:
             actLoadGameMenu(keyCode, action);
             break;
+        case 12:
+            actNewGameMenu(keyCode, action);
+            break;
         }
     }
 
+    private void actNewGameMenu(int keyCode, int action)
+    {
+        if (action != Canvas.FIRE)
+        {
+            return;
+        }
+        if (menu.canceled())
+        {
+            openMenu(2);
+            render();
+            return;
+        }
+        Game.clear();
+        int sel = menu.getSelect();
+        switch (sel)
+        {
+        case 0: // HON-SHOU-GI
+            Problem.setNormalGame();
+            break;
+        case 1: // SAKU-SEI-CHU
+            Storage.loadTemporaryProblem();
+            break;
+        default: // load
+            Storage.loadProblem(sel - 2);
+            break;
+        }
+        state = 0;
+        Game.initPlay();
+        clearMovable();
+        closeMenu();
+        render();
+    }
     private void actLoadGameMenu(int keyCode, int action)
     {
         if (action != Canvas.FIRE)
@@ -846,7 +883,8 @@ final class ShogiBan extends GameCanvas implements GConstants
             openMenu(10);
             break;
         case 5: // new
-            return;
+            openMenu(12);
+            break;
         case 6: // change mode
             mode = 1;
             state = 0;
