@@ -99,6 +99,7 @@ final class Game implements Board
         {
             System.arraycopy(currentField[i], 0, Problem.initialField[i], 0, 9);
         }
+        Problem.checkInvalid();
     }
 
     private static int
@@ -293,7 +294,7 @@ final class Game implements Board
         ready();
         History.clear();
     }
-    
+
     static void clear()
     {
         firstPlayer = 0;

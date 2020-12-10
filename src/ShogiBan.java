@@ -48,13 +48,14 @@ final class ShogiBan extends GameCanvas implements GConstants
         {
             Storage.loadTemporaryGame();
             board = Game.getInstance();
-            clearMovable();
         }
         else if (isEditMode())
         {
             Storage.loadTemporaryProblem();
             board = Problem.getInstance();
         }
+        clearMovable();
+        render();
     }
 
     static void writeTo(DataOutput out) throws IOException
@@ -704,6 +705,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         {
         case 1: // load
             Storage.loadProblem(sel);
+            clearMovable();
             closeMenu();
             setTicker(new Ticker("loaded"));
             break;
@@ -855,9 +857,11 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 1: // flip
             Problem.flip(selY, selX);
+            clearMovable();
             break;
         case 2: // change owner
             Problem.changeOwner(selY, selX);
+            clearMovable();
             break;
         default:
             return;
@@ -1014,10 +1018,12 @@ final class ShogiBan extends GameCanvas implements GConstants
             if (curY < 9)
             {
                 Problem.move(selY, selX, curY, curX);
+                clearMovable();
             }
             else
             {
                 Problem.moveIntoHands(selY, selX, curY - 9);
+                clearMovable();
             }
             state = 0;
             colorField.setCell(selX, selY, 0);
@@ -1026,6 +1032,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             if (curY < 9)
             {
                 Problem.put(selY - 9, selX, curY, curX);
+                clearMovable();
             }
             else
             {
@@ -1091,7 +1098,22 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void clearMovable()
     {
-        if (rangeMode == 0 || isEditMode())
+        if (isEditMode())
+        {
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    colorField.setCell(
+                        col,
+                        row,
+                        Problem.isInvalid(row, col) ? 5 : 0
+                    );
+                }
+            }
+            return;
+        }
+        if (rangeMode == 0)
         {
             colorField.fillCells(0, 0, 9, 9, 0);
             return;

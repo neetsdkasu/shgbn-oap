@@ -361,6 +361,7 @@ final class Storage
             ByteArrayInputStream bais = new ByteArrayInputStream(data);
             DataInputStream dis = new DataInputStream(bais);
             Problem.readFrom(dis);
+            Problem.checkInvalid();
         }
         catch (Exception ex)
         {
@@ -378,6 +379,7 @@ final class Storage
                 ByteArrayInputStream bais = new ByteArrayInputStream(data);
                 DataInputStream dis = new DataInputStream(bais);
                 Problem.readFrom(dis);
+                Problem.checkInvalid();
             }
             else
             {

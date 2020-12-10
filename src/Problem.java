@@ -32,8 +32,6 @@ final class Problem implements Board
 
     private static final int MAX_INITIAL_HAND = 18;
 
-    private static final int[] zero = new int[9];
-
     private static int stepLimit = 0;
     private static String title = "";
 
@@ -43,6 +41,9 @@ final class Problem implements Board
     static final int[][]
         initialField = new int[9][9],
         initialHands = new int[2][8];
+
+    static final boolean[][]
+        invalidPlaced = new boolean[9][9];
 
     static String getTitle()
     {
@@ -140,11 +141,18 @@ final class Problem implements Board
         update = date;
         generateTitle();
 
-        System.arraycopy(zero, 0, initialHands[0], 0, 8);
-        System.arraycopy(zero, 0, initialHands[1], 0, 8);
-        for (int i = 0; i < 9; i++)
+        for (int k = 0; k < 8; k++)
         {
-            System.arraycopy(zero, 0, initialField[i], 0, 9);
+            initialHands[0][k] = 0;
+            initialHands[1][k] = 0;
+        }
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                initialField[row][col] = 0;
+                invalidPlaced[row][col] = false;
+            }
         }
     }
 
@@ -246,6 +254,7 @@ final class Problem implements Board
         int k = kind(row, col);
         k = k >= GYOKU ? (k-8) : (k+8);
         initialField[row][col] = isOpponent(row, col) ? k + OPPONENT : k;
+        checkInvalid();
     }
 
     static void changeOwner(int row, int col)
@@ -264,6 +273,7 @@ final class Problem implements Board
             k = GYOKU;
         }
         initialField[row][col] = isOpponent(row, col) ? k : (k+OPPONENT);
+        checkInvalid();
     }
 
     static void incrementInHands(int player, int kind)
@@ -298,6 +308,7 @@ final class Problem implements Board
         }
         initialField[toRow][toCol] = initialField[fromRow][fromCol];
         initialField[fromRow][fromCol] = 0;
+        checkInvalid();
     }
 
     static void moveIntoHands(int fromRow, int fromCol, int toPlayer)
@@ -308,6 +319,7 @@ final class Problem implements Board
         }
         incrementInHands(toPlayer, (kind(fromRow, fromCol)-1)%8);
         initialField[fromRow][fromCol] = 0;
+        checkInvalid();
     }
 
     static void put(int fromPlayer, int kind, int toRow, int toCol)
@@ -331,6 +343,7 @@ final class Problem implements Board
             koma = GYOKU;
         }
         initialField[toRow][toCol] = koma + fromPlayer*OPPONENT;
+        checkInvalid();
     }
 
     static void give(int fromPlayer, int kind, int toPlayer)
@@ -345,5 +358,100 @@ final class Problem implements Board
         }
         incrementInHands(toPlayer, kind);
         decrementInHands(fromPlayer, kind);
+    }
+
+    static boolean isInvalid(int row, int col)
+    {
+        return invalidPlaced[row][col];
+    }
+
+    static void checkInvalid()
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                switch (kind(row, col))
+                {
+                case FU:
+                    if (isOpponent(row, col))
+                    {
+                        invalidPlaced[row][col] = row == 8;
+                    }
+                    else
+                    {
+                        invalidPlaced[row][col] = row == 0;
+                    }
+                    for (int tr = 0; tr < 9; tr++)
+                    {
+                        if (tr != row && initialField[row][col] == initialField[tr][col])
+                        {
+                            invalidPlaced[row][col] = true;
+                            break;
+                        }
+                    }
+                    break;
+                case KYO:
+                    if (isOpponent(row, col))
+                    {
+                        invalidPlaced[row][col] = row == 8;
+                    }
+                    else
+                    {
+                        invalidPlaced[row][col] = row == 0;
+                    }
+                    break;
+                case KEI:
+                    if (isOpponent(row, col))
+                    {
+                        invalidPlaced[row][col] = row >= 7;
+                    }
+                    else
+                    {
+                        invalidPlaced[row][col] = row <= 1;
+                    }
+                    break;
+                case GYOKU:
+                case OU:
+                    invalidPlaced[row][col] = nearGYOKU(row, col);
+                    break;
+                default:
+                    invalidPlaced[row][col] = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    private static boolean nearGYOKU(int row, int col)
+    {
+        int player = whose(row, col);
+        for (int dr = -1; dr < 2; dr++)
+        {
+            for (int dc = -1; dc < 2; dc++)
+            {
+                if (!Game.inField(row+dr,col+dc))
+                {
+                    continue;
+                }
+                if (dr == 0 && dc == 0)
+                {
+                    continue;
+                }
+                switch (kind(row+dr,col+dc))
+                {
+                case GYOKU:
+                case OU:
+                    if (whose(row+dr,col+dc) != player)
+                    {
+                        return true;
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        return false;
     }
 }
