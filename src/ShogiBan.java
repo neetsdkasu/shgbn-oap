@@ -457,9 +457,6 @@ final class ShogiBan extends GameCanvas implements GConstants
             break;
         case 9:
             menu = Menu.getNewProblemMenu().cleanUp();
-            // TODO
-            menu.setEnable(2, false); // playing-game
-            menu.setEnable(3, false); // saved-game
             break;
         case 10:
             menu = Menu.getListGameMenu();
@@ -590,6 +587,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         closeMenu();
         render();
     }
+
     private void actLoadGameMenu(int keyCode, int action)
     {
         if (action != Canvas.FIRE)
@@ -629,12 +627,33 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         if (menu.canceled())
         {
-            openMenu(2);
+            if (isGameMode())
+            {
+                openMenu(2);
+            }
+            else if (isEditMode())
+            {
+                openMenu(9);
+            }
             render();
             return;
         }
-        openMenu(11);
-        render();
+        if (isGameMode())
+        {
+            openMenu(11);
+            render();
+            return;
+        }
+        else if (isEditMode())
+        {
+            int sel = menu.getSelect();
+            state = 0;
+            Storage.loadGame(sel);
+            Game.copyToProblem();
+            clearMovable();
+            closeMenu();
+            render();
+        }
     }
 
     private void actNewProblemMenu(int keyCode, int action)
@@ -652,22 +671,26 @@ final class ShogiBan extends GameCanvas implements GConstants
         switch (menu.getSelect())
         {
         case 0: // TSUME-SHOU-GI
-            state = 0;
             Problem.setPuzzleTemplate();
-            closeMenu();
-            render();
             break;
         case 1: // HON-SHOU-GI
-            state = 0;
             Problem.setNormalGame();
-            closeMenu();
-            render();
             break;
         case 2: // playing-game SHI-KOU-CHU
+            Storage.loadTemporaryGame();
+            Game.copyToProblem();
+            break;
         case 3: // saved-game HO-ZON-SHI-KOU
+            openMenu(10);
+            render();
+            return;
         default:
             return;
         }
+        state = 0;
+        clearMovable();
+        closeMenu();
+        render();
     }
 
     private void actLoadProblemMenu(int keyCode, int action)
