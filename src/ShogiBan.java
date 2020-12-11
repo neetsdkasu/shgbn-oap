@@ -599,6 +599,11 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                openMenu(2);
+                render();
+            }
             return;
         }
         if (menu.canceled())
@@ -632,6 +637,11 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                openMenu(10);
+                render();
+            }
             return;
         }
         int sel = Menu.getListGameMenu().getSelect();
@@ -661,11 +671,11 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actListGameMenu(int keyCode, int action)
     {
-        if (action != FIRE)
+        if (action != FIRE && keyCode != KEY_CLR)
         {
             return;
         }
-        if (menu.canceled())
+        if (menu.canceled() || keyCode == KEY_CLR)
         {
             if (isGameMode())
             {
@@ -700,6 +710,11 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                openMenu(5);
+                render();
+            }
             return;
         }
         if (menu.canceled())
@@ -737,6 +752,11 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                openMenu(7);
+                render();
+            }
             return;
         }
         int sel = Menu.getListProblemMenu().getSelect();
@@ -762,11 +782,11 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private void actListProblemMenu(int keyCode, int action)
     {
-        if (action != FIRE)
+        if (action != FIRE && keyCode != KEY_CLR)
         {
             return;
         }
-        if (menu.canceled())
+        if (menu.canceled() || keyCode == KEY_CLR)
         {
             if (isEditMode())
             {
@@ -785,6 +805,18 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                if (isGameMode())
+                {
+                    openMenu(2);
+                }
+                else if (isEditMode())
+                {
+                    openMenu(5);
+                }
+                render();
+            }
             return;
         }
         switch (menu.getSelect())
@@ -830,6 +862,11 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                closeMenu();
+                render();
+            }
             return;
         }
         switch (menu.getSelect())
@@ -862,6 +899,11 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                closeMenu();
+                render();
+            }
             return;
         }
         switch (menu.getSelect())
@@ -886,6 +928,11 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                closeMenu();
+                render();
+            }
             return;
         }
         switch (menu.getSelect())
@@ -913,6 +960,11 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (action != FIRE)
         {
+            if (keyCode == KEY_CLR)
+            {
+                closeMenu();
+                render();
+            }
             return;
         }
         switch (menu.getSelect())
@@ -1129,7 +1181,42 @@ final class ShogiBan extends GameCanvas implements GConstants
                 return;
             }
             break;
+        case GAME_A: // prev 1 step
+            if (keyCode != KEY_NUM1 || !History.hasPrev())
+            {
+                return;
+            }
+            Game.goHistoryPrev();
+            state = 0;
+            clearMovable();
+            break;
+        case GAME_B: // next 1 step
+            if (keyCode != KEY_NUM3 || !History.hasNext())
+            {
+                return;
+            }
+            Game.goHistoryNext();
+            state = 0;
+            clearMovable();
+            break;
+        case GAME_C: // change range view
+            rangeMode = (rangeMode + 1) % 4;
+            if (state == 0)
+            {
+                clearMovable();
+            }
+            else
+            {
+                showMovable(true);
+            }
+            break;
         default:
+            if (keyCode == KEY_CLR)
+            {
+                state = 0;
+                clearMovable();
+                render();
+            }
             return;
         }
         render();

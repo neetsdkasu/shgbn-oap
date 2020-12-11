@@ -15,7 +15,8 @@ interface GConstants
         DARK_GREEN = 0x007F00,
         DARK_MAGENTA = 0x7F007F,
         DISP_W = 240,
-        DISP_H = 268;
+        DISP_H = 268,
+        KEY_CLR = -8;
 
     String[]
         CHARS = new String[100],
