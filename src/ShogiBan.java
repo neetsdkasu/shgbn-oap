@@ -204,9 +204,48 @@ final class ShogiBan extends GameCanvas implements GConstants
         if (menuMode != 0)
         {
             menu.paint(g);
+            if (menuMode == 2)
+            {
+                renderGameTitle(g);
+            }
         }
 
         flushGraphics();
+    }
+
+    private void renderGameTitle(Graphics g)
+    {
+        g.setFont(SMALL_FONT);
+        int h = SMALL_FONT.getHeight();
+
+        g.setColor(WHITE);
+        g.fillRect(0, DISP_H - h, DISP_W, h);
+        g.setColor(BLACK);
+        g.drawRect(0, DISP_H - h, DISP_W, h);
+
+        g.drawString(
+            Problem.getTitle(),
+            3,
+            DISP_H,
+            Graphics.LEFT|Graphics.BOTTOM
+        );
+
+        if (Game.getTitle().equals(Problem.getTitle()))
+        {
+            return;
+        }
+
+        g.setColor(WHITE);
+        g.fillRect(0, DISP_H - h*2, DISP_W, h);
+        g.setColor(BLACK);
+        g.drawRect(0, DISP_H - h*2, DISP_W, h);
+
+        g.drawString(
+            Game.getTitle(),
+            3,
+            DISP_H-h,
+            Graphics.LEFT|Graphics.BOTTOM
+        );
     }
 
     private void renderCursor(Graphics g)
