@@ -20,7 +20,7 @@ interface GConstants
 
     String[]
         CHARS = new String[100],
-        WORDS = new String[40];
+        WORDS = new String[45];
 
     Font
         SMALL_FONT = Font.getFont(

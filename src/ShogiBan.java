@@ -90,7 +90,7 @@ final class ShogiBan extends GameCanvas implements GConstants
     {
         if (title == null)
         {
-            setTicker(new Ticker("canceled"));
+            setTicker(new Ticker(WORDS[38]));
             closeMenu();
             render();
             return;
@@ -108,7 +108,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             Problem.setTitle(title);
             Storage.saveProblem(false);
         }
-        setTicker(new Ticker("saved"));
+        setTicker(new Ticker(WORDS[36]));
         closeMenu();
         render();
     }
@@ -653,12 +653,12 @@ final class ShogiBan extends GameCanvas implements GConstants
             Game.ready();
             clearMovable();
             closeMenu();
-            setTicker(new Ticker("loaded"));
+            setTicker(new Ticker(WORDS[37]));
             break;
         case 2: // delete
             Storage.deleteGame(sel);
             closeMenu();
-            setTicker(new Ticker("deleted"));
+            setTicker(new Ticker(WORDS[35]));
             break;
         case 3: // cancel
             openMenu(10);
@@ -766,12 +766,12 @@ final class ShogiBan extends GameCanvas implements GConstants
             Storage.loadProblem(sel);
             clearMovable();
             closeMenu();
-            setTicker(new Ticker("loaded"));
+            setTicker(new Ticker(WORDS[37]));
             break;
         case 2: // delete
             Storage.deleteProblem(sel);
             closeMenu();
-            setTicker(new Ticker("deleted"));
+            setTicker(new Ticker(WORDS[35]));
             break;
         case 3: // cancel
             openMenu(7);
@@ -840,7 +840,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 Storage.saveProblem(true);
             }
-            setTicker(new Ticker("saved"));
+            setTicker(new Ticker(WORDS[36]));
             closeMenu();
             render();
             break;

@@ -215,5 +215,20 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         resWords[32] = resChars[54] + resChars[29] + resChars[82]; // editing-problem SAKU-SEI-CHU
         resWords[33] = resChars[54] + resChars[29]; // edit-problem SAKU-SEI
         resWords[34] = resChars[70] + resChars[71]; // play-game SHI-KOU
+        resWords[35] = resChars[77] + resChars[78]
+                     + resChars[91] + resChars[90]
+                     + resChars[91] + resChars[92]; // deleted SAKU-JO-SHI-MA-SHI-TA
+        resWords[36] = resChars[50] + resChars[51]
+                     + resChars[91] + resChars[90]
+                     + resChars[91] + resChars[92]; // saved HO-ZON-SHI-MA-SHI-TA
+        resWords[37] = resChars[72] + resChars[27]
+                     + resChars[93] + resChars[27]
+                     + resChars[90] + resChars[91] + resChars[92]; // loaded YO-MI-KO-MI-MA-SHI-TA
+        resWords[38] = resWords[8]
+                     + resChars[90] + resChars[91] + resChars[92]; // canceled TORI-KESHI-MA-SHI-TA
+        resWords[39] = resChars[83] + resChars[84]
+                     + resChars[85] + resChars[56] + resChars[86]; // import I-N-PO---TO
+        resWords[40] = resChars[87] + resChars[88] + resChars[89]
+                     + resChars[85] + resChars[56] + resChars[86]; // export E-KU-SU-PO---TO
     }
 }
