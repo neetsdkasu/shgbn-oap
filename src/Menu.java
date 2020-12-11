@@ -235,6 +235,8 @@ final class Menu implements GConstants
     int width = 0, height = 0, offsetX, offsetY;
     int viewCount, viewTop = 0;
     int value = 0;
+    boolean scroll = false;
+    int scbar = 10, sch = 1, scc = 1;
 
     Menu(int num, String[] t)
     {
@@ -253,6 +255,15 @@ final class Menu implements GConstants
         height = viewCount * SMALL_FONT.getHeight();
         offsetX = (DISP_W - width) / 2;
         offsetY = (DISP_H - height) / 2;
+        if (t.length > viewCount)
+        {
+            scroll = true;
+            int page = (t.length + viewCount - 1) / viewCount;
+            int sec = Math.min(20, height / page);
+            scbar = height / sec;
+            sch = height - scbar;
+            scc = t.length - viewCount;
+        }
     }
 
     int getSelect()
@@ -326,18 +337,28 @@ final class Menu implements GConstants
             sel = (sel + 1) % text.length;
             break;
         case Canvas.LEFT:
-            if (id != 5 || sel != 0)
+            if (id == 5 && sel == 0)
+            {
+                value = Math.max(0, value - 2);
+                return true;
+            }
+            if (!scroll)
             {
                 return false;
             }
-            value = Math.max(0, value - 2);
+            sel = Math.max(0, sel - (viewCount - 1));
             break;
         case Canvas.RIGHT:
-            if (id != 5 || sel != 0)
+            if (id == 5 && sel == 0)
+            {
+                value = value == 0 ? 1 : (value + 2);
+                return true;
+            }
+            if (!scroll)
             {
                 return false;
             }
-            value = value == 0 ? 1 : (value + 2);
+            sel = Math.min(text.length - 1, sel + (viewCount - 1));
             break;
         case Canvas.FIRE:
             return !enable[sel];
@@ -358,6 +379,31 @@ final class Menu implements GConstants
     void paint(Graphics g)
     {
         g.setFont(SMALL_FONT);
+
+        if (scroll)
+        {
+            g.setColor(GRAY);
+            g.fillRect(
+                offsetX+width+3,
+                offsetY-2,
+                7,
+                height+5
+            );
+            g.setColor(BACKGROUND_COLOR);
+            g.fillRect(
+                offsetX+width+3,
+                offsetY,
+                4,
+                height
+            );
+            g.setColor(GRAY);
+            g.fillRect(
+                offsetX+width+3,
+                offsetY + sch * viewTop / scc,
+                4,
+                scbar
+            );
+        }
 
         g.setColor(GRAY);
         g.fillRect(offsetX-2, offsetY-2, width+5, height+5);
