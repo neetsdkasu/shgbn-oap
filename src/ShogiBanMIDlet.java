@@ -18,7 +18,10 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
 
     private static ShogiBanMIDlet midlet = null;
 
-    private static TextBox textBox = null;
+    private static TextBox
+        titleTextBox = null,
+        exportTextBox = null,
+        importTextBox = null;
 
     private static ShogiBan shogiBan = null;
 
@@ -26,7 +29,9 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         exitCommand = null,
         menuCommand = null,
         saveCommand = null,
-        cancelCommand = null;
+        cancelCommand = null,
+        closeCommand = null,
+        importCommand = null;
 
     public ShogiBanMIDlet()
     {
@@ -93,7 +98,7 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
         }
         else if (cmd == saveCommand)
         {
-            String title = textBox.getString();
+            String title = titleTextBox.getString();
             if (title != null && (title = title.trim()) != "")
             {
                 shogiBan.save(title);
@@ -101,33 +106,94 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
             }
             else
             {
-                textBox.setTicker(new Ticker("empty is wrong"));
+                titleTextBox.setTicker(new Ticker("empty is wrong"));
             }
         }
-        else if (cmd == cancelCommand)
+        else if (cmd == importCommand)
         {
-            shogiBan.save(null);
+            String data = importTextBox.getString();
+            if (data != null && (data = data.trim()) != "")
+            {
+                shogiBan.importData(data);
+                Display.getDisplay(this).setCurrent(shogiBan);
+            }
+            else
+            {
+                importTextBox.setTicker(new Ticker("empty is wrong"));
+            }
+        }
+        else if (cmd == closeCommand)
+        {
+            Display.getDisplay(this).setCurrent(shogiBan);
+        }
+        else if (cmd.getCommandType() == Command.CANCEL)
+        {
+            if (titleTextBox != null && titleTextBox.isShown())
+            {
+                shogiBan.save(null);
+            }
             Display.getDisplay(this).setCurrent(shogiBan);
         }
     }
 
-    static void showTextBox(String title)
+    static void showTitleTextBox(String title)
     {
-        if (textBox == null)
+        if (titleTextBox == null)
         {
-            textBox = new TextBox(GConstants.WORDS[26], title, 50, TextField.ANY);
+            titleTextBox = new TextBox(GConstants.WORDS[26], title, 50, TextField.ANY);
             saveCommand = new Command("SAVE", Command.OK, 1);
             cancelCommand = new Command("CANCEL", Command.CANCEL, 2);
-            textBox.addCommand(saveCommand);
-            textBox.addCommand(cancelCommand);
-            textBox.setCommandListener(midlet);
+            titleTextBox.addCommand(saveCommand);
+            titleTextBox.addCommand(cancelCommand);
+            titleTextBox.setCommandListener(midlet);
         }
         else
         {
-            textBox.setString(title);
-            textBox.setTicker(null);
+            titleTextBox.setString(title);
+            titleTextBox.setTicker(null);
         }
-        Display.getDisplay(midlet).setCurrent(textBox);
+        Display.getDisplay(midlet).setCurrent(titleTextBox);
+    }
+
+    static void showImport()
+    {
+        if (importTextBox == null)
+        {
+
+            importTextBox = new TextBox(GConstants.WORDS[39], "", 5000, TextField.ANY);
+            importCommand = new Command("IMPORT", Command.OK, 1);
+            cancelCommand = new Command("CANCEL", Command.CANCEL, 1);
+            importTextBox.addCommand(importCommand);
+            importTextBox.addCommand(cancelCommand);
+            importTextBox.setCommandListener(midlet);
+        }
+        else
+        {
+            importTextBox.setString("");
+            importTextBox.setTicker(null);
+        }
+        Display.getDisplay(midlet).setCurrent(importTextBox);
+    }
+
+    static void showExport(String data)
+    {
+        if (data.length() > 5000)
+        {
+            data = data.substring(0, 5000); // what?
+        }
+        if (exportTextBox == null)
+        {
+
+            exportTextBox = new TextBox(GConstants.WORDS[40], data, 5000, TextField.ANY);
+            closeCommand = new Command("CLOSE", Command.SCREEN, 1);
+            exportTextBox.addCommand(closeCommand);
+            exportTextBox.setCommandListener(midlet);
+        }
+        else
+        {
+            exportTextBox.setString(data);
+        }
+        Display.getDisplay(midlet).setCurrent(exportTextBox);
     }
 
     private static void loadResources()

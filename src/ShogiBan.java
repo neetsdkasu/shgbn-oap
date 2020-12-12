@@ -1,6 +1,4 @@
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import java.io.*;
 import javax.microedition.lcdui.*;
 import javax.microedition.lcdui.game.*;
 
@@ -36,6 +34,9 @@ final class ShogiBan extends GameCanvas implements GConstants
     private static Board board;
 
     private static Menu menu = null;
+
+    private static Base64.Encoder enc = null;
+    private static Base64.Decoder dec = null;
 
     ShogiBan()
     {
@@ -145,6 +146,114 @@ final class ShogiBan extends GameCanvas implements GConstants
             closeMenu();
             render();
             break;
+        }
+    }
+
+    void importData(String dataStr)
+    {
+        byte[] data = null;
+        try
+        {
+            if (dec == null)
+            {
+                dec = Base64.getMimeDecoder();
+            }
+            data = dec.decode(dataStr);
+        }
+        catch (Exception _)
+        {
+            setTicker(new Ticker("decode error"));
+            return;
+        }
+        try
+        {
+            ByteArrayInputStream bais = new ByteArrayInputStream(data);
+            DataInputStream dis = new DataInputStream(bais);
+            switch (menuMode)
+            {
+            case 7:
+            case 12:
+                Problem.readFrom(dis);
+                break;
+            case 10:
+                Game.readFrom(dis);
+                break;
+            default:
+                break;
+            }
+        }
+        catch (IOException _)
+        {
+            setTicker(new Ticker("invalid format"));
+            return;
+        }
+        state = 0;
+        if (isGameMode())
+        {
+            if (menuMode == 12)
+            {
+                // import Problem
+                Game.initPlay();
+            }
+            else if (menuMode == 10)
+            {
+                // import Game
+                Game.ready();
+            }
+        }
+        else if (isEditMode())
+        {
+            if (menuMode == 10)
+            {
+                // import Game
+                Game.copyToProblem();
+            }
+        }
+        clearMovable();
+        closeMenu();
+        setTicker(new Ticker(WORDS[39]));
+        render();
+    }
+
+    private void export()
+    {
+        ByteArrayOutputStream baos = null;
+        try
+        {
+            baos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(baos);
+            if (isGameMode())
+            {
+                Game.writeTo(dos);
+            }
+            else if (isEditMode())
+            {
+                Problem.writeTo(dos);
+            }
+            if (enc == null)
+            {
+                enc = Base64.getMimeEncoder();
+            }
+            String data = enc.encodeToString(baos.toByteArray());
+            ShogiBanMIDlet.showExport(data);
+        }
+        catch (IOException ex)
+        {
+            throw new RuntimeException(ex.toString());
+        }
+        finally
+        {
+            if (baos != null)
+            {
+                try
+                {
+                    baos.close();
+                }
+                catch (IOException _)
+                {
+                    // do nothing
+                }
+            }
         }
     }
 
@@ -622,8 +731,11 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 1: // SAKU-SEI-CHU
             Storage.loadTemporaryProblem();
             break;
+        case 2: // import
+            ShogiBanMIDlet.showImport();
+            return;
         default: // load
-            Storage.loadProblem(sel - 2);
+            Storage.loadProblem(sel - 3);
             break;
         }
         state = 0;
@@ -644,7 +756,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             }
             return;
         }
-        int sel = Menu.getListGameMenu().getSelect();
+        int sel = Menu.getListGameMenu().getSelect() - 1;
         switch (menu.getSelect())
         {
         case 1: // load
@@ -688,6 +800,12 @@ final class ShogiBan extends GameCanvas implements GConstants
             render();
             return;
         }
+        if (menu.getSelect() == 0)
+        {
+            // import
+            ShogiBanMIDlet.showImport();
+            return;
+        }
         if (isGameMode())
         {
             openMenu(11);
@@ -696,7 +814,7 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
         else if (isEditMode())
         {
-            int sel = menu.getSelect();
+            int sel = menu.getSelect() - 1;
             state = 0;
             Storage.loadGame(sel);
             Game.copyToProblem();
@@ -759,7 +877,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             }
             return;
         }
-        int sel = Menu.getListProblemMenu().getSelect();
+        int sel = Menu.getListProblemMenu().getSelect() - 1;
         switch (menu.getSelect())
         {
         case 1: // load
@@ -794,6 +912,11 @@ final class ShogiBan extends GameCanvas implements GConstants
                 render();
             }
         }
+        else if (menu.getSelect() == 0)
+        {
+            // import
+            ShogiBanMIDlet.showImport();
+        }
         else
         {
             openMenu(8);
@@ -824,11 +947,11 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 0: // create
             if (isGameMode())
             {
-                ShogiBanMIDlet.showTextBox(Game.getTitle());
+                ShogiBanMIDlet.showTitleTextBox(Game.getTitle());
             }
             else if (isEditMode())
             {
-                ShogiBanMIDlet.showTextBox(Problem.getTitle());
+                ShogiBanMIDlet.showTitleTextBox(Problem.getTitle());
             }
             break;
         case 1: // overwrite
@@ -844,7 +967,10 @@ final class ShogiBan extends GameCanvas implements GConstants
             closeMenu();
             render();
             break;
-        case 2: // cancel
+        case 2: // export
+            export();
+            break;
+        case 3: // cancel
             if (isGameMode())
             {
                 openMenu(2);

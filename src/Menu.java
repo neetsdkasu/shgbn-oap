@@ -93,9 +93,10 @@ final class Menu implements GConstants
             saveMenu = new Menu(6, new String[]{
                 WORDS[15] + WORDS[16], // create
                 WORDS[14] + WORDS[16], // overwrite
+                WORDS[40], // export
                 WORDS[8] // cancel
             });
-            saveMenu.setCancelItem(2);
+            saveMenu.setCancelItem(3);
         }
 
         return saveMenu;
@@ -108,13 +109,14 @@ final class Menu implements GConstants
         String[] list = Storage.listUpProblem();
         if (listProblemMenu != null)
         {
-            if (list[0] == listProblemMenu.text[0])
+            if (list[0] == listProblemMenu.text[1])
             {
                 return listProblemMenu;
             }
         }
-        String[] items = new String[list.length + 1];
-        System.arraycopy(list, 0, items, 0, list.length);
+        String[] items = new String[list.length + 2];
+        System.arraycopy(list, 0, items, 1, list.length);
+        items[0] = WORDS[39];
         items[items.length-1] = WORDS[8];
         listProblemMenu = new Menu(7, items);
         listProblemMenu.setCancelItem(items.length-1);
@@ -168,13 +170,14 @@ final class Menu implements GConstants
         String[] list = Storage.listUpGame();
         if (listGameMenu != null)
         {
-            if (list[0] == listGameMenu.text[0])
+            if (list[0] == listGameMenu.text[1])
             {
                 return listGameMenu;
             }
         }
-        String[] items = new String[list.length + 1];
-        System.arraycopy(list, 0, items, 0, list.length);
+        String[] items = new String[list.length + 2];
+        System.arraycopy(list, 0, items, 1, list.length);
+        items[0] = WORDS[39];
         items[items.length-1] = WORDS[8];
         listGameMenu = new Menu(10, items);
         listGameMenu.setCancelItem(items.length-1);
@@ -209,15 +212,16 @@ final class Menu implements GConstants
         String[] list = Storage.listUpProblem();
         if (newGameMenu != null)
         {
-            if (list[0] == newGameMenu.text[2])
+            if (list[0] == newGameMenu.text[3])
             {
                 return newGameMenu;
             }
         }
-        String[] items = new String[list.length + 3];
-        System.arraycopy(list, 0, items, 2, list.length);
+        String[] items = new String[list.length + 4];
+        System.arraycopy(list, 0, items, 3, list.length);
         items[0] = WORDS[28];
         items[1] = WORDS[32];
+        items[2] = WORDS[39];
         items[items.length-1] = WORDS[8];
         newGameMenu = new Menu(12, items);
         newGameMenu.setCancelItem(items.length-1);
