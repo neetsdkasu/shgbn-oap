@@ -392,7 +392,7 @@ final class Storage
         }
     }
 
-    static void saveProblem(boolean overwrite)
+    static boolean saveProblem(boolean overwrite)
     {
         ByteArrayOutputStream baos = null;
         try
@@ -417,6 +417,11 @@ final class Storage
                 problemRS.addRecord(data, 0, data.length);
             }
             updatedProblemList = true;
+            return true;
+        }
+        catch (RecordStoreFullException _)
+        {
+            return false;
         }
         catch (Exception ex)
         {
@@ -477,7 +482,7 @@ final class Storage
         }
     }
 
-    static void saveGame(boolean overwrite)
+    static boolean saveGame(boolean overwrite)
     {
         ByteArrayOutputStream baos = null;
         try
@@ -502,6 +507,11 @@ final class Storage
                 gameRS.addRecord(data, 0, data.length);
             }
             updatedGameList = true;
+            return true;
+        }
+        catch (RecordStoreFullException _)
+        {
+            return false;
         }
         catch (Exception ex)
         {

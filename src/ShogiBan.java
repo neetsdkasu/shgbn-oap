@@ -102,12 +102,20 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 Game.setTitle(title);
             }
-            Storage.saveGame(false);
+            if (!Storage.saveGame(false))
+            {
+                setTicker(new Ticker("failed save: storage is full"));
+                return;
+            }
         }
         else if (isEditMode())
         {
             Problem.setTitle(title);
-            Storage.saveProblem(false);
+            if (!Storage.saveProblem(false))
+            {
+                setTicker(new Ticker("failed save: storage is full"));
+                return;
+            }
         }
         setTicker(new Ticker(WORDS[36]));
         closeMenu();
@@ -957,11 +965,19 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 1: // overwrite
             if (isGameMode())
             {
-                Storage.saveGame(true);
+                if (!Storage.saveGame(true))
+                {
+                    setTicker(new Ticker("failed save: storage is full"));
+                    return;
+                }
             }
             else if (isEditMode())
             {
-                Storage.saveProblem(true);
+                if (!Storage.saveProblem(true))
+                {
+                    setTicker(new Ticker("failed save: storage is full"));
+                    return;
+                }
             }
             setTicker(new Ticker(WORDS[36]));
             closeMenu();
