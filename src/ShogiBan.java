@@ -578,7 +578,6 @@ final class ShogiBan extends GameCanvas implements GConstants
             menu = Menu.getGameMenu();
             menu.setEnable(1, History.hasPrev());
             menu.setEnable(2, History.hasNext());
-            menu.setEnable(4, Storage.hasGame()); // load
             break;
         case 3:
             menu = Menu.getEditMenuOnBan().cleanUp();
@@ -593,7 +592,6 @@ final class ShogiBan extends GameCanvas implements GConstants
         case 5:
             menu = Menu.getEditMenu();
             menu.setValue(Problem.getStepLimit());
-            menu.setEnable(2, Storage.hasProblem()); // load
             break;
         case 6:
             menu = Menu.getSaveMenu().cleanUp();
