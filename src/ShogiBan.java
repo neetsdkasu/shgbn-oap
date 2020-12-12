@@ -1603,6 +1603,8 @@ final class ShogiBan extends GameCanvas implements GConstants
             g.setColor(invisible);
             g.fillRect(0, 0, img.getWidth(), img.getHeight());
 
+            int bit = ShogiBanMIDlet.WTK ? 1 : 0;
+
             for (int i = 0; i < 8; i++)
             {
                 for (int k = 0; k < 2; k++)
@@ -1660,7 +1662,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
                 g.drawString(
                     CHARS[i+9],
-                    i*CELL_SIZE+CELL_SIZE/2+1,
+                    i*CELL_SIZE+CELL_SIZE/2+bit,
                     CELL_SIZE-1,
                     Graphics.HCENTER|Graphics.BOTTOM
                 );
@@ -1677,7 +1679,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
                 g.drawString(
                     CHARS[i < 4 ? (i+17) : (i+16)],
-                    i*CELL_SIZE+CELL_SIZE/2+1,
+                    i*CELL_SIZE+CELL_SIZE/2+bit,
                     2*CELL_SIZE-1,
                     Graphics.HCENTER|Graphics.BOTTOM
                 );
