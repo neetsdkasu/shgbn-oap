@@ -1599,7 +1599,7 @@ final class ShogiBan extends GameCanvas implements GConstants
 
             g.setFont(SMALL_FONT);
 
-            int invisible = 0xFFFFFF; // dummy color
+            int invisible = 0xEEEEEE; // dummy color
             g.setColor(invisible);
             g.fillRect(0, 0, img.getWidth(), img.getHeight());
 
@@ -1728,20 +1728,35 @@ final class ShogiBan extends GameCanvas implements GConstants
             Image img = Image.createImage(8*CELL_SIZE, CELL_SIZE);
             Graphics g = img.getGraphics();
 
+            int invisible = 0xEEEEEE; // dummy color
+            g.setColor(invisible);
+            g.fillRect(0, 0, img.getWidth(), img.getHeight());
+
             for (int i = 0; i < 8; i++)
             {
-                int c = (((i>>0) & 1) * BLUE)
-                      | (((i>>1) & 1) * GREEN)
-                      | (((i>>2) & 1) * RED);
+                int cr = ((i>>2) & 1) * RED;
+                int cg = ((i>>1) & 1) * GREEN;
+                int cb = ((i>>0) & 1) * BLUE;
+                int c = (BLUE  & ((cb >> 1) + ((BACKGROUND_COLOR&BLUE)  >> 1)))
+                      | (GREEN & ((cg >> 1) + ((BACKGROUND_COLOR&GREEN) >> 1)))
+                      | (RED   & ((cr >> 1) + ((BACKGROUND_COLOR&RED)   >> 1)));
                 g.setColor(c);
-                g.fillRect(i*CELL_SIZE, 0, CELL_SIZE, CELL_SIZE);
+                g.fillRect(i*CELL_SIZE+1, 1, CELL_SIZE-1, CELL_SIZE-1);
             }
 
             int[] rgbData = new int[img.getWidth() * img.getHeight()];
             img.getRGB(rgbData, 0, img.getWidth(), 0, 0, img.getWidth(), img.getHeight());
+            int mask = 0xFFFFFF;
             for (int i = 0; i < rgbData.length; i++)
             {
-                rgbData[i] = rgbData[i] & 0x77FFFFFF;
+                if ((rgbData[i] & mask) == invisible)
+                {
+                    rgbData[i] = 0;
+                }
+                else
+                {
+                    rgbData[i] = rgbData[i] | 0xFF000000;
+                }
             }
 
             img = Image.createRGBImage(rgbData, img.getWidth(), img.getHeight(), true);
