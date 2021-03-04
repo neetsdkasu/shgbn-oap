@@ -831,7 +831,7 @@ final class Game implements Board
                         }
                         guardian[row][col] |= (1 << (4-3*dr-dc));
                     }
-                    else if (k == KYO && dr == 1 - 2*player)
+                    else if (k == KYO && dr == 2*player - 1)
                     {
                         if (len > 1)
                         {
