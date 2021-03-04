@@ -125,8 +125,10 @@ final class Game implements Board
     private static final boolean[][]
         movable = new boolean[9][9];
 
+    private static final int[]
+        danger = new int[2];
+
     private static final boolean[]
-        danger = new boolean[2],
         checkmate = new boolean[2];
 
     private static String title = "";
@@ -167,9 +169,14 @@ final class Game implements Board
         title = t;
     }
 
+    static boolean isDanger(int player)
+    {
+        return danger[player] > 0;
+    }
+
     static boolean isDanger()
     {
-        return danger[currentPlayer];
+        return isDanger(currentPlayer);
     }
 
     static boolean isCheckmate()
@@ -376,7 +383,7 @@ final class Game implements Board
             break;
         }
 
-        if (danger[player])
+        if (isDanger(player))
         {
             filterDanger(player);
         }
@@ -504,7 +511,7 @@ final class Game implements Board
         }
 
         int player = whose(row, col);
-        if (danger[player])
+        if (isDanger(player))
         {
             filterDanger(player);
         }
@@ -643,7 +650,7 @@ final class Game implements Board
     {
         for (int i = 0; i < 2; i++)
         {
-            danger[i] = false;
+            danger[i] = 0;
             checkmate[i] = false;
         }
         for (int row = 0; row < 9; row++)
@@ -696,9 +703,10 @@ final class Game implements Board
                     int player = whose(row, col);
                     checkOutePathHI(row, col);
                     checkOutePathKAKU(row, col);
-                    if (getRange(1^player, row, col) > 0)
+                    int rng = getRange(1^player, row, col);
+                    if (rng > 0)
                     {
-                        danger[player] = true;
+                        danger[player] = rng;
                         checkOuteAround(player, row, col);
                     }
                     break;
@@ -709,10 +717,10 @@ final class Game implements Board
         }
         for (int i = 0; i < 2; i++)
         {
-            if (danger[i])
+            if (isDanger(i))
             {
                 checkmate[i] = calcCheckmate(i);
-                if (checkmate[i])
+                if (checkmate[i] || danger[i] >= 2)
                 {
                     for (int row = 0; row < 9; row++)
                     {
@@ -831,7 +839,7 @@ final class Game implements Board
                         }
                         guardian[row][col] |= (1 << (4-3*dr-dc));
                     }
-                    else if (k == KYO && dr == 1 - 2*player)
+                    else if (k == KYO && dr == 2*player - 1)
                     {
                         if (len > 1)
                         {
