@@ -21,6 +21,8 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     private static int curX, curY, selX, selY;
 
+    private static int myHandX = 0, oppoHandX = 0, backupX = 0, backupY = 0;
+
     private static Image backgroundImage;
     private static Sprite komaStamp, modeMark;
     private static TiledLayer komaField, colorField;
@@ -61,20 +63,31 @@ final class ShogiBan extends GameCanvas implements GConstants
 
     static void writeTo(DataOutput out) throws IOException
     {
-        out.writeInt(1); // version
+        out.writeInt(2); // version
         out.writeInt(mode);
         out.writeInt(rangeMode);
         out.writeInt(curX);
         out.writeInt(curY);
+        out.writeInt(backupX);
+        out.writeInt(backupY);
+        out.writeInt(myHandX);
+        out.writeInt(oppoHandX);
     }
 
     static void readFrom(DataInput in) throws IOException
     {
-        in.readInt(); // version
+        int ver = in.readInt(); // version
         mode = in.readInt();
         rangeMode = in.readInt();
         curX = in.readInt();
         curY = in.readInt();
+        if (ver > 1)
+        {
+            backupX = in.readInt();
+            backupY = in.readInt();
+            myHandX = in.readInt();
+            oppoHandX = in.readInt();
+        }
     }
 
     static boolean isGameMode()
@@ -1173,6 +1186,23 @@ final class ShogiBan extends GameCanvas implements GConstants
         }
     }
 
+    private void backupCursor()
+    {
+        if (curY == 10)
+        {
+            oppoHandX = curX;
+        }
+        else if (curY == 9)
+        {
+            myHandX = curX;
+        }
+        else
+        {
+            backupX = curX;
+            backupY = curY;
+        }
+    }
+
     private void moveEditModeCursor(int keyCode, int action)
     {
         switch (action)
@@ -1183,6 +1213,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 curX = 7;
             }
+            backupCursor();
             break;
         case DOWN:
             curY = (curY + 1) % 11;
@@ -1190,6 +1221,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 curX = 7;
             }
+            backupCursor();
             break;
         case LEFT:
             if (curY < 9)
@@ -1200,6 +1232,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 curX = (curX + 7) % 8;
             }
+            backupCursor();
             break;
         case RIGHT:
             if (curY < 9)
@@ -1210,6 +1243,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 curX = (curX + 1) % 8;
             }
+            backupCursor();
             break;
         case FIRE:
             if (!fireEditMode())
@@ -1218,6 +1252,34 @@ final class ShogiBan extends GameCanvas implements GConstants
             }
             break;
         default:
+            if (keyCode == KEY_STAR)
+            {
+                if (curY == 9)
+                {
+                    curX = backupX;
+                    curY = backupY;
+                }
+                else
+                {
+                    curX = myHandX;
+                    curY = 9;
+                }
+                break;
+            }
+            else if (keyCode == KEY_POUND)
+            {
+                if (curY == 10)
+                {
+                    curX = backupX;
+                    curY = backupY;
+                }
+                else
+                {
+                    curX = oppoHandX;
+                    curY = 10;
+                }
+                break;
+            }
             return;
         }
         render();
@@ -1287,6 +1349,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 curX = 7;
             }
+            backupCursor();
             break;
         case DOWN:
             curY = (curY + 1) % 11;
@@ -1294,6 +1357,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 curX = 7;
             }
+            backupCursor();
             break;
         case LEFT:
             if (curY < 9)
@@ -1304,6 +1368,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 curX = (curX + 7) % 8;
             }
+            backupCursor();
             break;
         case RIGHT:
             if (curY < 9)
@@ -1314,6 +1379,7 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 curX = (curX + 1) % 8;
             }
+            backupCursor();
             break;
         case FIRE:
             if (!firePlayeMode())
@@ -1355,7 +1421,35 @@ final class ShogiBan extends GameCanvas implements GConstants
             {
                 state = 0;
                 clearMovable();
-                render();
+                break;
+            }
+            else if (keyCode == KEY_STAR)
+            {
+                if (curY == 9)
+                {
+                    curX = backupX;
+                    curY = backupY;
+                }
+                else
+                {
+                    curX = myHandX;
+                    curY = 9;
+                }
+                break;
+            }
+            else if (keyCode == KEY_POUND)
+            {
+                if (curY == 10)
+                {
+                    curX = backupX;
+                    curY = backupY;
+                }
+                else
+                {
+                    curX = oppoHandX;
+                    curY = 10;
+                }
+                break;
             }
             return;
         }
