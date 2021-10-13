@@ -28,6 +28,14 @@ final class Menu implements GConstants
                 WORDS[17], // replay
                 WORDS[15], // new
                 WORDS[18]  // change mode
+            }, new String[]{
+                "7", // change range view
+                "1", // prev 1 step
+                "3", // next 1 step
+                null,
+                null,
+                null,
+                null
             });
         }
 
@@ -232,7 +240,7 @@ final class Menu implements GConstants
         BACKGROUND_COLOR = 0xE0E0E0;
 
     boolean[] enable;
-    String[] text;
+    String[] text, keys;
     int[] textWidth;
     int id;
     int sel = 0, cancel = -1;
@@ -244,8 +252,14 @@ final class Menu implements GConstants
 
     Menu(int num, String[] t)
     {
+        this(num, t, null);
+    }
+
+    Menu(int num, String[] t, String[] ks)
+    {
         id = num;
         text = t;
+        keys = ks;
         enable = new boolean[t.length];
         textWidth = new int[t.length];
         for (int i = 0; i < t.length; i++)
@@ -448,6 +462,33 @@ final class Menu implements GConstants
                 (i+1)*SMALL_FONT.getHeight() + offsetY,
                 Graphics.HCENTER|Graphics.BOTTOM
             );
+            if (keys != null && p < keys.length && keys[p] != null)
+            {
+                g.setColor(0xC0C0C0);
+                g.fillRoundRect(
+                    offsetX - 22,
+                    i*SMALL_FONT.getHeight() + offsetY + 2,
+                    16,
+                    SMALL_FONT.getHeight() - 4,
+                    5,
+                    5
+                );
+                g.setColor(BLACK);
+                g.drawRoundRect(
+                    offsetX - 22,
+                    i*SMALL_FONT.getHeight() + offsetY + 2,
+                    16,
+                    SMALL_FONT.getHeight() - 4,
+                    5,
+                    5
+                );
+                g.drawString(
+                    keys[p],
+                    offsetX - 22 + 8,
+                    (i+1)*SMALL_FONT.getHeight() + offsetY,
+                    Graphics.HCENTER|Graphics.BOTTOM
+                );
+            }
         }
 
         g.setColor(RED);

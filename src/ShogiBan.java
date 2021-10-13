@@ -337,10 +337,64 @@ final class ShogiBan extends GameCanvas implements GConstants
             if (menuMode == 2)
             {
                 renderGameTitle(g);
+                renderKeyDescription(g);
+            }
+            else if (menuMode == 5)
+            {
+                renderKeyDescription(g);
             }
         }
 
         flushGraphics();
+    }
+
+    private void renderKeyDescription(Graphics g)
+    {
+        final String[] keys = new String[]{ "*", "#" };
+        int offsetX = menu.offsetX - 25;
+        int offsetY = menu.offsetY + menu.height + 10;
+        int width = menu.width + 50;
+        g.setFont(SMALL_FONT);
+        g.setColor(WHITE);
+        g.fillRect(
+            offsetX,
+            offsetY,
+            width,
+            SMALL_FONT.getHeight() * 2
+        );
+        for (int i = 0; i < 2; i++)
+        {
+            g.setColor(0xC0C0C0);
+            g.fillRoundRect(
+                offsetX + 3,
+                i * SMALL_FONT.getHeight() + offsetY + 2,
+                16,
+                SMALL_FONT.getHeight() - 4,
+                5,
+                5
+            );
+            g.setColor(BLACK);
+            g.drawRoundRect(
+                offsetX + 3,
+                i * SMALL_FONT.getHeight() + offsetY + 2,
+                16,
+                SMALL_FONT.getHeight() - 4,
+                5,
+                5
+            );
+            g.drawString(
+                keys[i],
+                offsetX + 3 + 8,
+                (i+1) * SMALL_FONT.getHeight() + offsetY,
+                Graphics.HCENTER|Graphics.BOTTOM
+            );
+            g.drawString(
+                WORDS[41+i],
+                offsetX + 16 + 10,
+                (i+1) * SMALL_FONT.getHeight() + offsetY,
+                Graphics.LEFT|Graphics.BOTTOM
+            );
+        }
     }
 
     private void renderGameTitle(Graphics g)
