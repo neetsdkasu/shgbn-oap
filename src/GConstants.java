@@ -19,7 +19,7 @@ interface GConstants
         KEY_CLR = -8;
 
     String[]
-        CHARS = new String[100],
+        CHARS = new String[105],
         WORDS = new String[45];
 
     Font

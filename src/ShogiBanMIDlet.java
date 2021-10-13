@@ -296,5 +296,11 @@ public final class ShogiBanMIDlet extends MIDlet implements CommandListener
                      + resChars[85] + resChars[56] + resChars[86]; // import I-N-PO---TO
         resWords[40] = resChars[87] + resChars[88] + resChars[89]
                      + resChars[85] + resChars[56] + resChars[86]; // export E-KU-SU-PO---TO
+        resWords[41] = resWords[0]
+                     + resChars[96] + resChars[97] + resChars[98]
+                     + resWords[19]; // SEN-TE-BAN-DAI-HE-I-DOU
+        resWords[42] = resWords[1]
+                     + resChars[96] + resChars[97] + resChars[98]
+                     + resWords[19]; // GO-TE-BAN-DAI-HE-I-DOU
     }
 }
